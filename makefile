@@ -26,11 +26,28 @@ else
 	cc_with_flags = $(CC) $(STD) $(CFLAGS)
 endif
 
+ifneq ($(OS),Windows_NT)
+  	TERMINFO="$(shell ncursesw6-config --terminfo 2>/dev/null || \
+                         ncurses6-config  --terminfo 2>/dev/null || \
+                         ncursesw5-config --terminfo 2>/dev/null || \
+                         ncurses5-config  --terminfo 2>/dev/null || \
+                         echo "/usr/share/terminfo")"
+  	TERMINFO_DIRS="$(shell ncursesw6-config --terminfo-dirs 2>/dev/null || \
+                         ncurses6-config  --terminfo-dirs 2>/dev/null || \
+                         ncursesw5-config --terminfo-dirs 2>/dev/null || \
+                         ncurses5-config  --terminfo-dirs 2>/dev/null || \
+                         echo "/etc/terminfo:/lib/terminfo:/usr/share/terminfo:/usr/lib/terminfo:/usr/local/share/terminfo:/usr/local/lib/terminfo")"
+else
+  	TERMINFO_DIRS=""
+  	TERMINFO=""
+endif
+DEFINES ?= -DTERMINFO='$(TERMINFO)' -DTERMINFO_DIRS='$(TERMINFO_DIRS)'
+
 $(target) : $(objects)
 	$(cc_with_flags) -o $(target) $(objects)
 
 obj/%.o: lib/%.c
-	$(cc_with_flags) -c $< -o $@
+	$(cc_with_flags) $(DEFINES) -c $< -o $@
 
 obj/%.o: %.c
 	$(cc_with_flags) -c $< -o $@

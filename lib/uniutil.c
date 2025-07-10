@@ -31,16 +31,6 @@ along with unibilium.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/types.h>
 #include <unistd.h>
 
-#if !defined(_WIN32) && !defined(WIN32)
-#define TERMINFO_DIRS                                                                                                  \
-    "$(shell ncursesw6-config --terminfo-dirs 2>/dev/null || ncurses6-config  --terminfo-dirs 2>/dev/null || "         \
-    "ncursesw5-config --terminfo-dirs 2>/dev/null || ncurses5-config  --terminfo-dirs 2>/dev/null || "                 \
-    "/etc/terminfo:/lib/terminfo:/usr/share/terminfo:/usr/lib/terminfo:/usr/local/share/terminfo:/usr/local/lib/"      \
-    "terminfo)"
-#else
-#define TERMINFO_DIRS ""
-#endif /* ifdef  !defined(_WIN32) && !defined(WIN32) */
-
 #ifndef TERMINFO_DIRS
 #error "internal error: TERMINFO_DIRS is not defined"
 #endif
