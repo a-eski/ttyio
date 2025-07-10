@@ -1,6 +1,6 @@
 # ttyterm
 
-A lightweight wrapper library for unibilium.
+A lightweight wrapper library for unibilium. Useful for writing CLI/REPL/shell applications. Example is in main.c.
 
 ## Code Definitions
 
