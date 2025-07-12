@@ -127,11 +127,16 @@ int main()
 
     term_write("a", 1);
     assert(term.pos.y == 15);
-    assert(term.pos.x == term.size.x - 1);
+    assert(term.pos.x == term.size.x);
 
     term_send(&tcaps.newline);
     assert(term.pos.y == 16);
     assert(!term.pos.x);
+
+    char test[] = "test expansion working";
+    term_print("%s test", test);
+    assert(term.pos.y == 16);
+    assert(term.pos.x == 28);
 
     char c;
     if (read(STDIN_FILENO, &c, 1) == -1)
