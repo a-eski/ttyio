@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
@@ -127,7 +129,7 @@ int main()
 
     term_write("a", 1);
     assert(term.pos.y == 15);
-    assert(term.pos.x == term.size.x);
+    assert(term.pos.x == term.size.x - 1);
 
     term_send(&tcaps.newline);
     assert(term.pos.y == 16);
@@ -137,6 +139,22 @@ int main()
     term_print("%s test", test);
     assert(term.pos.y == 16);
     assert(term.pos.x == 28);
+
+    term_send(&tcaps.newline);
+    assert(term.pos.y == 17);
+    assert(!term.pos.x);
+
+    size_t n = term.size.x * 1.5;
+    char* multiline = malloc(n);
+    memset(multiline, 0, n);
+    for (size_t i = 0; i < n; ++i) {
+        multiline[i] = 'a' + i % 26;
+    }
+    term_print(multiline);
+    assert(term.pos.y == 18);
+    assert(term.pos.x == (n % term.size.x) + 1);
+
+    free(multiline);
 
     char c;
     if (read(STDIN_FILENO, &c, 1) == -1)
