@@ -87,13 +87,13 @@ void term_size_update(int printed)
         fatal("Term size not set.\n");
 
     if (printed + term.pos.x + 1 > term.size.x) {
-        // term.pos.y += (int)(printed / term.size.x);
+        term.pos.y += (int)(printed / term.size.x);
         // printf("term.pos.y %d\n", term.pos.y);
-        term.pos.x = (printed % term.size.x) + 1;
+        term.pos.x = printed == 1 ? 1 : (printed % term.size.x) + 1;
         // printf("term.pos.x %d\n", term.pos.x);
     }
     else {
-        term.pos.x += printed + 1;
+        term.pos.x += printed == 1 ? 1 : printed + 1;
         // printf("term.pox.x %d\n", term.pos.x);
     }
 }

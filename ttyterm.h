@@ -9,8 +9,8 @@
 #include "tcaps.h"
 
 typedef struct {
-    int x;
-    int y;
+    size_t x;
+    size_t y;
 } Coordinates;
 
 typedef struct {
