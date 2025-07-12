@@ -1,3 +1,6 @@
+/* Copyright ttyterm (C) by Alex Eski 2025 */
+/* Licensed under GPLv3, see LICENSE for more information. */
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -83,14 +86,14 @@ void term_size_update(int printed)
     if (!term.size.x)
         fatal("Term size not set.\n");
 
-    if (printed + term.pos.x > term.size.x) {
-        term.pos.y += (int)(printed / term.size.x);
+    if (printed + term.pos.x + 1 > term.size.x) {
+        // term.pos.y += (int)(printed / term.size.x);
         // printf("term.pos.y %d\n", term.pos.y);
-        term.pos.x = printed % term.size.x;
+        term.pos.x = (printed % term.size.x) + 1;
         // printf("term.pos.x %d\n", term.pos.x);
     }
     else {
-        term.pos.x += printed;
+        term.pos.x += printed + 1;
         // printf("term.pox.x %d\n", term.pos.x);
     }
 }
@@ -102,10 +105,19 @@ int term_putc(const int c)
     return rv;
 }
 
+int term_write(const char* buf, const int n)
+{
+    int printed = write(STDOUT_FILENO, buf, n);
+    assert(printed == n);
+    term_size_update(printed);
+    return printed;
+}
+
 void term_puts(const char* restrict str)
 {
-    int printed = puts(str);
-    term_size_update(printed);
+    puts(str);
+    ++term.pos.y;
+    term.pos.x = 0;
 }
 
 void term_print(const char* restrict fmt, ...)
@@ -181,6 +193,9 @@ int term_send(cap* c)
         term.pos.x = term.saved_pos.x;
         term.pos.y = term.saved_pos.y;
         break;
+    case CAP_NEWLINE:
+        term.pos.x = 0;
+        ++term.pos.y; // y handled in term_size_update currently.
     default:
         break;
     }
@@ -196,6 +211,9 @@ void term_send_n(cap* c, uint_fast32_t n)
 
 int term_color_set(int color)
 {
+    if (!tcaps.color_max)
+        return 0;
+
     constexpr size_t size = 64;
     char buf[size] = {0};
     size_t len = unibi_run(tcaps.color_set.val, (unibi_var_t[9]){[0] = unibi_var_from_num(color)}, buf, size);
@@ -208,6 +226,9 @@ int term_color_set(int color)
 
 int term_color_bg_set(int color)
 {
+    if (!tcaps.color_max)
+        return 0;
+
     constexpr size_t size = 64;
     char buf[size] = {0};
     size_t len = unibi_run(tcaps.color_bg_set.val, (unibi_var_t[9]){[0] = unibi_var_from_num(color)}, buf, size);
@@ -216,4 +237,34 @@ int term_color_bg_set(int color)
         return 1;
     fflush(stdout);
     return 0;
+}
+
+int term_goto_prev_eol()
+{
+    /*if (tcaps.line_goto_prev_eol.fallback == FB_NONE) {
+        constexpr size_t size = 64;
+        char buf[size] = {0};
+        assert(term.pos.y > 0);
+        size_t len = unibi_run(tcaps.cursor_pos.val,
+                        (unibi_var_t[9]){
+                            [0] = unibi_var_from_num(term.size.x - term.pos.x - 1),
+                            [1] = unibi_var_from_num(--term.pos.y)
+                        },
+                        buf, size);
+
+        if (write(STDOUT_FILENO, buf, len) == -1)
+            return 1;
+        term.pos.x = term.size.x - term.pos.x - 1;
+        // --term.pos.y;
+        return 0;
+    }*/
+    if (tcaps.line_goto_prev_eol.fallback >= FB_NONE) {
+        term_send(&tcaps.cursor_up);
+        // term_send(&tcaps.line_goto_bol);
+        term_send_n(&tcaps.cursor_right, term.size.x - term.pos.x - 1);
+        fflush(stdout);
+        return 0;
+    }
+
+    unreachable();
 }

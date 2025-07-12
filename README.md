@@ -10,8 +10,9 @@ Still in very very early stages of development.
 
 * Easy access to terminal capabilities.
 * Simple output interfaces.
-* Tracks cursor position, terminal size, and saved position automatically.
+* Tracks cursor position, terminal size, and saved cursor position automatically.
 * Falls back to ASCII control characters when can't load capabilities.
+* Advanced capabilities with multiple fallbacks.
 
 ## Unibilium
 

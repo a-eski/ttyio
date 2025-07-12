@@ -1,3 +1,6 @@
+/* Copyright ttyterm (C) by Alex Eski 2025 */
+/* Licensed under GPLv3, see LICENSE for more information. */
+
 #pragma once
 
 #ifndef TCAPS_GUARD_H_
@@ -24,13 +27,20 @@ enum caps {
     CAP_CURSOR_HIDE,
     CAP_CURSOR_SAVE,
     CAP_CURSOR_RESTORE,
+    CAP_CURSOR_POS,
 
     CAP_LINE_CLR_TO_EOL,
     CAP_LINE_CLR_TO_BOL,
+    CAP_LINE_GOTO_BOL, // i.e. carriage return
 
     CAP_COLOR_RESET,
     CAP_COLOR_SET,
-    CAP_COLOR_BG_SET
+    CAP_COLOR_BG_SET,
+    CAPS_END
+};
+
+enum advanced_caps__ {
+    CAP_LINE_GOTO_PREV_EOL = CAPS_END
 };
 
 typedef struct {
@@ -38,6 +48,12 @@ typedef struct {
     size_t len;
     const char* val;
 } cap;
+
+// Advanced cap use multiple fallbacks that must be handled by func's in ttyterm.
+typedef struct {
+    enum { FB_NONE, FB_FIRST, FB_SECOND } fallback;
+    enum advanced_caps__ type;
+} advanced_cap__;
 
 #define cap_New(s, t)                                                                                                  \
     (cap)                                                                                                              \
@@ -72,16 +88,33 @@ typedef struct {
     cap cursor_hide;
     cap cursor_save;
     cap cursor_restore;
+    cap cursor_pos;
 
     cap line_clr_to_eol; /* Line */
     cap line_clr_to_bol;
+    cap line_goto_bol;
+    advanced_cap__ line_goto_prev_eol;
 
     int color_max; /* Colors */
     cap color_reset;
     cap color_set;
     cap color_bg_set;
+
 } termcaps;
 
+/* Init all caps */
 void tcaps_init();
+/* Init all caps excluding advanced caps like line_goto_prev_eol */
+void tcaps_init_opts(bool init_advanced_caps);
+
+/* Specific caps initialization */
+void tcaps_init_keys();
+void tcaps_init_scr();
+void tcaps_init_cursor();
+void tcaps_init_line();
+void tcaps_init_colors();
+
+/* Advanced cap initiailization */
+void tcaps_init_goto_prev_eol();
 
 #endif // !TCAPS_GUARD_H_
