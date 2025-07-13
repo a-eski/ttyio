@@ -25,14 +25,12 @@ extern Terminal term;
 void term_init();
 void term_reset();
 
-/* Output, tracks pos of cursor and stores in term */
-int term_putc(const int c);
+/* Output, tracks pos of cursor for you and stores in term */
 int term_write(const char* buf, const int n);
-void term_puts(const char* restrict str);
-void term_print(const char* restrict fmt, ...);
-void term_fprint(FILE* restrict file, const char* restrict fmt, ...);
-void term_println(const char* restrict fmt, ...);
-void term_line_next();
+int term_puts(const char* restrict str);
+int term_print(const char* restrict fmt, ...);
+int term_fprint(FILE* restrict file, const char* restrict fmt, ...);
+int term_println(const char* restrict fmt, ...);
 
 /* Output using tcaps, fallsback to ASCII control characters if cap not found */
 int term_send(cap* restrict c);
@@ -46,7 +44,7 @@ int term_color_set(int color);
 int term_color_bg_set(int color);
 // reset colors with 'term_send(&tcaps.color_reset)'
 
-/* Advanced Output with multiple fallbacks.
+/* Advanced Output which can have multiple fallbacks.
  * Fallback handling is in ttyterm, tcaps just determines which method to use.
  */
 int term_goto_prev_eol();

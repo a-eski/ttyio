@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
@@ -28,7 +29,7 @@ void fatal(const char* fmt, ...)
     abort();
 }
 
-Coordinates term_size_get()
+Coordinates term_size_get__()
 {
     struct winsize window;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &window);
@@ -38,7 +39,8 @@ Coordinates term_size_get()
 void term_init()
 {
     term = (Terminal){0};
-    term.size = term_size_get();
+    term.size = term_size_get__();
+    assert(term.size.x && term.size.y);
 
     uterm = unibi_from_term(getenv("TERM"));
     if (!uterm)
@@ -67,8 +69,6 @@ void term_init()
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &tios) != 0) {
         perror("Could not set terminal settings");
     }
-
-    // print("term.size.x %d, term.size.y %d\n", term.size.x, term.size.y);
 }
 
 void term_reset()
@@ -80,47 +80,50 @@ void term_reset()
     unibi_destroy(uterm);
 }
 
-void term_size_update(int printed)
+void term_y_update__(int printed)
+{
+    if (term.pos.y < term.size.y - 1) {
+        if (!printed)  {
+            ++term.pos.y;
+        }
+        else {
+            term.pos.y += (int)(printed / term.size.x);
+        }
+    }
+}
+
+void term_size_update__(int printed)
 {
     assert(printed != EOF);
     if (!term.size.x)
         fatal("Term size not set.\n");
 
     if (printed + term.pos.x + 1 > term.size.x) {
-        term.pos.y += (int)(printed / term.size.x);
-        // printf("term.pos.y %d\n", term.pos.y);
+        term_y_update__(printed);
         term.pos.x = printed == 1 ? 1 : (printed % term.size.x) + 1;
-        // printf("term.pos.x %d\n", term.pos.x);
     }
     else {
         term.pos.x += printed == 1 ? 1 : printed + 1;
-        // printf("term.pox.x %d\n", term.pos.x);
     }
-}
-
-int term_putc(const int c)
-{
-    int rv = putchar(c);
-    term_size_update(1);
-    return rv;
 }
 
 int term_write(const char* buf, const int n)
 {
     int printed = write(STDOUT_FILENO, buf, n);
-    assert(printed == n);
-    term_size_update(printed);
+    assert(printed != EOF && printed == n);
+    term_size_update__(printed);
     return printed;
 }
 
-void term_puts(const char* restrict str)
+int term_puts(const char* restrict str)
 {
-    puts(str);
-    ++term.pos.y;
+    int printed = puts(str);
     term.pos.x = 0;
+    term_y_update__(0);
+    return printed;
 }
 
-void term_print(const char* restrict fmt, ...)
+int term_print(const char* restrict fmt, ...)
 {
     int printed;
     va_list args;
@@ -129,10 +132,11 @@ void term_print(const char* restrict fmt, ...)
     va_end(args);
     fflush(stdout);
 
-    term_size_update(printed);
+    term_size_update__(printed);
+    return printed;
 }
 
-void term_println(const char* restrict fmt, ...)
+int term_println(const char* restrict fmt, ...)
 {
     int printed;
     va_list args;
@@ -141,11 +145,12 @@ void term_println(const char* restrict fmt, ...)
     va_end(args);
     fflush(stdout);
 
-    term_size_update(printed);
+    term_size_update__(printed);
     term_send(&tcaps.newline);
+    return printed;
 }
 
-void term_fprint(FILE* restrict file, const char* restrict fmt, ...)
+int term_fprint(FILE* restrict file, const char* restrict fmt, ...)
 {
     int printed;
     va_list args;
@@ -154,7 +159,8 @@ void term_fprint(FILE* restrict file, const char* restrict fmt, ...)
     va_end(args);
     fflush(stdout);
 
-    term_size_update(printed);
+    term_size_update__(printed);
+    return printed;
 }
 
 int term_send(cap* c)
@@ -195,7 +201,7 @@ int term_send(cap* c)
         break;
     case CAP_NEWLINE:
         term.pos.x = 0;
-        ++term.pos.y; // y handled in term_size_update currently.
+        term_y_update__(0);
     default:
         break;
     }
@@ -205,8 +211,9 @@ int term_send(cap* c)
 
 void term_send_n(cap* c, uint_fast32_t n)
 {
-    for (uint_fast32_t i = 0; i < n; ++i)
+    for (uint_fast32_t i = 0; i < n; ++i) {
         term_send(c);
+    }
 }
 
 int term_color_set(int color)
@@ -241,26 +248,25 @@ int term_color_bg_set(int color)
 
 int term_goto_prev_eol()
 {
-    /*if (tcaps.line_goto_prev_eol.fallback == FB_NONE) {
+    if (tcaps.line_goto_prev_eol.fallback == FB_NONE) {
         constexpr size_t size = 64;
         char buf[size] = {0};
         assert(term.pos.y > 0);
         size_t len = unibi_run(tcaps.cursor_pos.val,
                         (unibi_var_t[9]){
-                            [0] = unibi_var_from_num(term.size.x - term.pos.x - 1),
-                            [1] = unibi_var_from_num(--term.pos.y)
+                            [0] = unibi_var_from_num(term.pos.y == 0 ? 0 : term.pos.y - 1),
+                            [1] = unibi_var_from_num(term.size.x - 1)
                         },
                         buf, size);
 
         if (write(STDOUT_FILENO, buf, len) == -1)
             return 1;
         term.pos.x = term.size.x - term.pos.x - 1;
-        // --term.pos.y;
+        --term.pos.y;
         return 0;
-    }*/
-    if (tcaps.line_goto_prev_eol.fallback >= FB_NONE) {
+    }
+    if (tcaps.line_goto_prev_eol.fallback >= FB_FIRST) {
         term_send(&tcaps.cursor_up);
-        // term_send(&tcaps.line_goto_bol);
         term_send_n(&tcaps.cursor_right, term.size.x - term.pos.x - 1);
         fflush(stdout);
         return 0;

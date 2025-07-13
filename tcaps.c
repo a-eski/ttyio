@@ -151,14 +151,8 @@ void tcaps_init_goto_prev_eol()
     const char* cursor_pos = unibi_get_str(uterm, unibi_cursor_address);
     if (cursor_pos && *cursor_pos) {
         tcaps.line_goto_prev_eol.fallback = FB_NONE;
-        return;
     }
-
-    const char* goto_bol = unibi_get_str(uterm, unibi_carriage_return);
-    if (goto_bol && *goto_bol) {
+    else {
         tcaps.line_goto_prev_eol.fallback = FB_FIRST;
-        return;
     }
-
-    tcaps.line_goto_prev_eol.fallback = FB_SECOND;
 }

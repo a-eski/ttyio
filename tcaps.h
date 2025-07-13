@@ -49,7 +49,7 @@ typedef struct {
     const char* val;
 } cap;
 
-// Advanced cap use multiple fallbacks that must be handled by func's in ttyterm.
+// Advanced caps can use multiple fallbacks that must be handled by functions in ttyterm.
 typedef struct {
     enum { FB_NONE, FB_FIRST, FB_SECOND } fallback;
     enum advanced_caps__ type;
@@ -104,7 +104,7 @@ typedef struct {
 
 /* Init all caps */
 void tcaps_init();
-/* Init all caps excluding advanced caps like line_goto_prev_eol */
+/* Init all caps but can exclude advanced caps like line_goto_prev_eol */
 void tcaps_init_opts(bool init_advanced_caps);
 
 /* Specific caps initialization */
