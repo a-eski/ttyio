@@ -1,15 +1,27 @@
 #include <assert.h>
-#include <stdarg.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ioctl.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include "ttyterm.h"
 
+void multiline(double multiplier)
+{
+    // size_t prev_y = term.pos.y;
+    size_t n = term.size.x * multiplier;
+    char* multiline = malloc(n);
+    memset(multiline, 0, n);
+    for (size_t i = 0; i < n; ++i) {
+        multiline[i] = 'a' + i % 26;
+    }
+    term_print(multiline);
+    free(multiline);
+    // assert(term.pos.y == prev_y + (n / term.size.x));
+    assert(term.pos.x == (n % term.size.x) + 1);
+}
+
 /* example usage */
+/* These tests were done with term.size.x 171, term.size.y 46 */
 int main()
 {
     term_init();
@@ -111,7 +123,7 @@ int main()
     assert(term.pos.y == 14);
     assert(!term.pos.x);
 
-    term_println("term.size.x %d, term.s.y %d", term.pos.x, term.pos.y);
+    term_println("term.pos.x %d, term.pos.y %d", term.pos.x, term.pos.y);
     assert(term.pos.y == 15);
     assert(!term.pos.x);
 
@@ -144,22 +156,68 @@ int main()
     assert(term.pos.y == 17);
     assert(!term.pos.x);
 
-    size_t n = term.size.x * 1.5;
-    char* multiline = malloc(n);
-    memset(multiline, 0, n);
-    for (size_t i = 0; i < n; ++i) {
-        multiline[i] = 'a' + i % 26;
-    }
-    term_print(multiline);
-    assert(term.pos.y == 18);
-    assert(term.pos.x == (n % term.size.x) + 1);
+    multiline(1.5);
 
-    free(multiline);
+    term_send_n(&tcaps.newline, 3);
+    assert(term.pos.y == 21);
+    assert(!term.pos.x);
+
+    multiline(3.4);
+    assert(term.pos.y == 24);
+
+    term_println("term.pos.x %d, term.pos.y %d", term.pos.x, term.pos.y);
+    term_send_n(&tcaps.newline, 3);
+    assert(term.pos.y == 28);
+    assert(!term.pos.x);
+
+    term_println("term.size.x %d, term.size.y %d", term.size.x, term.size.y);
+    assert(term.pos.y == 29);
+    assert(!term.pos.x);
+
+    multiline(6.7);
+    assert(term.pos.y == 35);
+    term_send_n(&tcaps.newline, 3);
+    assert(term.pos.y == 38);
+    assert(!term.pos.x);
+
+    multiline(6.7);
+    assert(term.pos.y == 44);
+    term_send(&tcaps.newline);
+    assert(term.pos.y == 45);
+    assert(!term.pos.x);
+
+    term_println("This is the last line!");
+    assert(term.pos.y == 45);
+    assert(!term.pos.x);
+
+    term_println("This is the last line!");
+    assert(term.pos.y == 45);
+    assert(!term.pos.x);
+
+    term_println("This is the last line!");
+    assert(term.pos.y == 45);
+    assert(!term.pos.x);
+
+    term_send_n(&tcaps.newline, 3);
+    assert(term.pos.y == 45);
+    assert(!term.pos.x);
+
+    term_send(&tcaps.cursor_up);
+    assert(term.pos.y == 44);
+    assert(!term.pos.x);
+
+    multiline(.8);
+    assert(term.pos.y == 44);
+    multiline(.8);
+    assert(term.pos.y == 44);
+    term_println("term.pos.x %d, term.pos.y %d", term.pos.x, term.pos.y);
+    assert(term.pos.y == 45);
 
     char c;
     if (read(STDIN_FILENO, &c, 1) == -1)
         return 1;
 
+    term_send(&tcaps.newline);
     term_reset();
     return 0;
 }
