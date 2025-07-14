@@ -121,7 +121,7 @@ int term_putc(const char c)
 int term_write(const char* buf, const size_t n)
 {
     int printed = write(STDOUT_FILENO, buf, n);
-    assert(printed != EOF && printed == n);
+    assert(printed != EOF && (size_t)printed == n);
     term_size_update__(printed);
     return printed;
 }
