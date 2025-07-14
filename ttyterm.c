@@ -2,7 +2,10 @@
 /* Licensed under GPLv3, see LICENSE for more information. */
 
 #include <assert.h>
+#include <errno.h>
 #include <stdarg.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -107,10 +110,18 @@ void term_size_update__(int printed)
     }
 }
 
-int term_write(const char* buf, const int n)
+int term_putc(const char c)
+{
+    int printed = write(STDOUT_FILENO, &c, 1);
+    assert(printed != EOF && printed == 1);
+    term_size_update__(1);
+    return 1;
+}
+
+int term_write(const char* buf, const size_t n)
 {
     int printed = write(STDOUT_FILENO, buf, n);
-    assert(printed != EOF && printed == n);
+    assert(printed != EOF && (size_t)printed == n);
     term_size_update__(printed);
     return printed;
 }
@@ -163,6 +174,28 @@ int term_fprint(FILE* restrict file, const char* restrict fmt, ...)
     return printed;
 }
 
+int term_fprintln(FILE* restrict file, const char* restrict fmt, ...)
+{
+    int printed;
+    va_list args;
+    va_start(args, fmt);
+    printed = vfprintf(file, fmt, args);
+    va_end(args);
+    fflush(stdout);
+
+    term_size_update__(printed);
+    return printed;
+}
+
+int term_perror(const char* restrict msg)
+{
+    char* err_str = strerror(errno);
+    int printed = term_fprintln(stderr, "%s: %s", msg, err_str);
+
+    term_size_update__(printed);
+    return printed;
+}
+
 int term_send(cap* c)
 {
     assert(c && c->len);
@@ -209,9 +242,9 @@ int term_send(cap* c)
     return 0;
 }
 
-void term_send_n(cap* c, uint_fast32_t n)
+void term_send_n(cap* c, size_t n)
 {
-    for (uint_fast32_t i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         term_send(c);
     }
 }
@@ -246,6 +279,11 @@ int term_color_bg_set(int color)
     return 0;
 }
 
+int term_color_reset()
+{
+    return term_send(&tcaps.color_reset);
+}
+
 int term_goto_prev_eol()
 {
     if (tcaps.line_goto_prev_eol.fallback == FB_NONE) {
@@ -261,6 +299,7 @@ int term_goto_prev_eol()
 
         if (write(STDOUT_FILENO, buf, len) == -1)
             return 1;
+        fflush(stdout);
         term.pos.x = term.size.x - term.pos.x - 1;
         --term.pos.y;
         return 0;
