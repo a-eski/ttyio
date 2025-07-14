@@ -41,13 +41,13 @@ else
   	TERMINFO_DIRS=""
   	TERMINFO=""
 endif
-DEFINES ?= -DTERMINFO='$(TERMINFO)' -DTERMINFO_DIRS='$(TERMINFO_DIRS)'
+TTYTERM_DEFINES ?= -DTERMINFO='$(TERMINFO)' -DTERMINFO_DIRS='$(TERMINFO_DIRS)'
 
 $(target) : $(objects)
 	$(cc_with_flags) -o $(target) $(objects)
 
 obj/%.o: lib/%.c
-	$(cc_with_flags) $(DEFINES) -c $< -o $@
+	$(cc_with_flags) $(TTYTERM_DEFINES) -c $< -o $@
 
 obj/%.o: %.c
 	$(cc_with_flags) -c $< -o $@

@@ -7,7 +7,6 @@
 #define TCAPS_GUARD_H_
 
 #include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 
 enum caps {
