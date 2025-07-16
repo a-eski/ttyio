@@ -1,7 +1,7 @@
 /* Copyright ttyterm (C) by Alex Eski 2025 */
 /* Licensed under GPLv3, see LICENSE for more information. */
 
-#include <string.h> // used by macro cap_New
+#include <string.h> // used by macros cap_New && cap_New_Lit
 
 #include "lib/unibilium.h"
 #include "tcaps.h"

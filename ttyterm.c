@@ -1,6 +1,10 @@
 /* Copyright ttyterm (C) by Alex Eski 2025 */
 /* Licensed under GPLv3, see LICENSE for more information. */
 
+#ifndef _POXIC_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#endif /* ifndef _POXIC_C_SOURCE */
+
 #include <assert.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -19,9 +23,15 @@
 unibi_term* uterm;
 termcaps tcaps;
 Terminal term;
+
 static struct termios otios;
 
-void fatal(const char* fmt, ...)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+void fatal__(const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -29,8 +39,10 @@ void fatal(const char* fmt, ...)
     fprintf(stderr, fmt, args);
     va_end(args);
     fflush(stderr);
+
     abort();
 }
+#pragma GCC diagnostic pop
 
 Coordinates term_size_get__()
 {
@@ -47,7 +59,7 @@ void term_init()
 
     uterm = unibi_from_term(getenv("TERM"));
     if (!uterm)
-        fatal("Can't find TERM from environment variables. Specify a terminal type with `setenv TERM <yourtype>'.\n");
+        fatal__("\nCan't find TERM from environment variables. Specify a terminal type with `setenv TERM <yourtype>'.\n");
 
     tcaps_init();
 
@@ -99,7 +111,7 @@ void term_size_update__(int printed)
 {
     assert(printed != EOF);
     if (!term.size.x)
-        fatal("Term size not set.\n");
+        fatal__("\nTerm size not set.\n");
 
     if (printed + term.pos.x + 1 > term.size.x) {
         term_y_update__(printed);
@@ -112,7 +124,7 @@ void term_size_update__(int printed)
 
 int term_putc(const char c)
 {
-    int printed = write(STDOUT_FILENO, &c, 1);
+    [[maybe_unused]] int printed = write(STDOUT_FILENO, &c, 1);
     assert(printed != EOF && printed == 1);
     term_size_update__(1);
     return 1;
@@ -126,11 +138,45 @@ int term_write(const char* buf, const size_t n)
     return printed;
 }
 
+int term_writeln(const char* buf, const size_t n)
+{
+    int printed = write(STDOUT_FILENO, buf, n);
+    assert(printed != EOF && (size_t)printed == n);
+    term_size_update__(printed);
+    term_send(&tcaps.newline);
+    return printed;
+}
+
+int term_fwrite(const int fd, const char* buf, const size_t n)
+{
+    int printed = write(fd, buf, n);
+    assert(printed != EOF && (size_t)printed == n);
+    term_size_update__(printed);
+    return printed;
+}
+
+int term_fwriteln(const int fd, const char* buf, const size_t n)
+{
+    int printed = write(fd, buf, n);
+    assert(printed != EOF && (size_t)printed == n);
+    term_size_update__(printed);
+    term_dsend(fd, &tcaps.newline);
+    return printed;
+}
+
 int term_puts(const char* restrict str)
 {
     int printed = puts(str);
     term.pos.x = 0;
     term_y_update__(0);
+    return printed;
+}
+
+int term_fputs(const char* restrict str, FILE* restrict file)
+{
+    int printed = fputs(str, file);
+    term.pos.x = 0;
+    term_send(&tcaps.newline);
     return printed;
 }
 
@@ -187,19 +233,100 @@ int term_fprintln(FILE* restrict file, const char* restrict fmt, ...)
     return printed;
 }
 
-int term_perror(const char* restrict msg)
+int term_dprint(const int fd, const char* restrict fmt, ...)
 {
-    char* err_str = strerror(errno);
-    int printed = term_fprintln(stderr, "%s: %s", msg, err_str);
+    int printed;
+    va_list args;
+    va_start(args, fmt);
+    printed = vdprintf(fd, fmt, args);
+    va_end(args);
+    fflush(stdout);
 
     term_size_update__(printed);
     return printed;
 }
 
-int term_send(cap* c)
+int term_dprintln(const int fd, const char* restrict fmt, ...)
+{
+    int printed;
+    va_list args;
+    va_start(args, fmt);
+    printed = vdprintf(fd, fmt, args);
+    va_end(args);
+    fflush(stdout);
+
+    term_size_update__(printed);
+    term_send(&tcaps.newline);
+    return printed;
+}
+
+int term_perror(const char* restrict msg)
+{
+    char* err_str = strerror(errno);
+    term_color_set(TERM_RED_ERROR);
+    int printed = term_fprint(stderr, "%s: ", msg);
+    term_color_reset();
+    printed += term_fprint(stderr, err_str);
+
+    term_size_update__(printed);
+    term_fsend(&tcaps.newline, stderr);
+    return printed;
+}
+
+int term_send(cap* restrict c)
+{
+    return term_dsend(STDOUT_FILENO, c);
+}
+
+int term_fsend(cap* restrict c, FILE* restrict file)
 {
     assert(c && c->len);
-    if (write(STDOUT_FILENO, c->val, c->len) == -1)
+    fwrite(c->val, sizeof(char), c->len, file);
+    fflush(file);
+
+    switch (c->type) {
+    case CAP_BS:
+        --term.pos.x;
+        break;
+    case CAP_CURSOR_HOME: {
+        term.pos.x = 0;
+        term.pos.y = 0;
+        break;
+    }
+    case CAP_CURSOR_RIGHT:
+        ++term.pos.x;
+        break;
+    case CAP_CURSOR_LEFT:
+        --term.pos.x;
+        break;
+    case CAP_CURSOR_UP:
+        --term.pos.y;
+        break;
+    case CAP_CURSOR_DOWN:
+        ++term.pos.y;
+        break;
+    case CAP_CURSOR_SAVE:
+        term.saved_pos.x = term.pos.x;
+        term.saved_pos.y = term.pos.y;
+        break;
+    case CAP_CURSOR_RESTORE:
+        term.pos.x = term.saved_pos.x;
+        term.pos.y = term.saved_pos.y;
+        break;
+    case CAP_NEWLINE:
+        term.pos.x = 0;
+        term_y_update__(0);
+    default:
+        break;
+    }
+
+    return 0;
+}
+
+int term_dsend(const int fd, cap* restrict c)
+{
+    assert(c && c->len);
+    if (write(fd, c->val, c->len) == -1)
         return 1;
     fflush(stdout);
 
@@ -242,10 +369,24 @@ int term_send(cap* c)
     return 0;
 }
 
-void term_send_n(cap* c, size_t n)
+void term_send_n(cap* restrict c, const size_t n)
 {
     for (size_t i = 0; i < n; ++i) {
         term_send(c);
+    }
+}
+
+void term_fsend_n(cap* restrict c, const size_t n, FILE* restrict file)
+{
+    for (size_t i = 0; i < n; ++i) {
+        term_fsend(c, file);
+    }
+}
+
+void term_dsend_n(const int fd, cap* restrict c, const size_t n)
+{
+    for (size_t i = 0; i < n; ++i) {
+        term_dsend(fd, c);
     }
 }
 
@@ -313,3 +454,5 @@ int term_goto_prev_eol()
 
     unreachable();
 }
+
+#pragma GCC diagnostic pop

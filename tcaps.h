@@ -62,7 +62,7 @@ typedef struct {
 #define cap_New_Lit(s, t)                                                                                              \
     (cap)                                                                                                              \
     {                                                                                                                  \
-        .val = (s), .len = sizeof((s)), .type = (t)                                                                    \
+        .val = (s), .len = sizeof((s)) - 1, .type = (t)                                                                \
     }
 #define cap_New_s(s, n, t)                                                                                             \
     (cap)                                                                                                              \
