@@ -61,6 +61,8 @@ unibi_term* unibi_from_fp(FILE* fp)
     return unibi_from_mem(buf, n);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 unibi_term* unibi_from_fd(int fd)
 {
     char buf[MAX_BUF];
@@ -77,6 +79,7 @@ unibi_term* unibi_from_fd(int fd)
 
     return unibi_from_mem(buf, n);
 }
+#pragma GCC diagnostic pop
 
 unibi_term* unibi_from_file(const char* file)
 {
