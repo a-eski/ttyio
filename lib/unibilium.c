@@ -19,6 +19,12 @@ along with unibilium.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+
 #include "unibilium.h"
 
 #include <assert.h>
@@ -1526,3 +1532,6 @@ size_t unibi_run(const char* fmt, unibi_var_t param[9], char* p, size_t n)
     unibi_format(vars, vars + 26, fmt, param, out, &ctx, NULL, NULL);
     return ctx.w;
 }
+
+#pragma GCC diagnostic pop
+#pragma GCC diagnostic pop

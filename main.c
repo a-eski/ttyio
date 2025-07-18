@@ -8,16 +8,16 @@
 void multiline(double multiplier)
 {
     // size_t prev_y = term.pos.y;
-    size_t n = term.size.x * multiplier;
+    size_t n = term.size.x * multiplier + 1;
     char* multiline = malloc(n);
     memset(multiline, 0, n);
-    for (size_t i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n - 1; ++i) {
         multiline[i] = 'a' + i % 26;
     }
-    term_print(multiline);
+    int printed = term_print("%s", multiline);
     free(multiline);
     // assert(term.pos.y == prev_y + (n / term.size.x));
-    assert(term.pos.x == (n % term.size.x) + 1);
+    assert(term.pos.x == (printed == 1 ? 1 : ((size_t)printed % term.size.x) + 1));
 }
 
 /* example usage */
@@ -72,11 +72,11 @@ int main()
     assert(term.pos.y == 8);
     assert(term.pos.x == 8);
 
-    term_print("term.pos.x %d, term.pos.y %d ", term.pos.x, term.pos.y);
+    term_print("term.pos.x %zu, term.pos.y %zu ", term.pos.x, term.pos.y);
     assert(term.pos.y == 8);
     assert(term.pos.x == 36);
 
-    term_println("term.pos.x %d, term.pos.y %d", term.pos.x, term.pos.y);
+    term_println("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
     assert(term.pos.y == 9);
     assert(!term.pos.x);
 
@@ -123,11 +123,11 @@ int main()
     assert(term.pos.y == 14);
     assert(!term.pos.x);
 
-    term_println("term.pos.x %d, term.pos.y %d", term.pos.x, term.pos.y);
+    term_println("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
     assert(term.pos.y == 15);
     assert(!term.pos.x);
 
-    term_println("term.pos.x %d, term.pos.y %d", term.pos.x, term.pos.y);
+    term_println("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
     assert(term.pos.y == 16);
     assert(!term.pos.x);
 
@@ -165,12 +165,12 @@ int main()
     multiline(3.4);
     assert(term.pos.y == 24);
 
-    term_println("term.pos.x %d, term.pos.y %d", term.pos.x, term.pos.y);
+    term_println("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
     term_send_n(&tcaps.newline, 3);
     assert(term.pos.y == 28);
     assert(!term.pos.x);
 
-    term_println("term.size.x %d, term.size.y %d", term.size.x, term.size.y);
+    term_println("term.size.x %zu, term.size.y %zu", term.size.x, term.size.y);
     assert(term.pos.y == 29);
     assert(!term.pos.x);
 
@@ -210,7 +210,16 @@ int main()
     assert(term.pos.y == 44);
     multiline(.8);
     assert(term.pos.y == 44);
-    term_println("term.pos.x %d, term.pos.y %d", term.pos.x, term.pos.y);
+    term_println("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
+    assert(term.pos.y == 45);
+
+    for (int i = 0; i < tcaps.color_max; ++i) {
+        term_color_bg_set(i);
+        term_write(" ", 1);
+    }
+    term_color_reset();
+    assert(term.pos.y == 45);
+    term_send(&tcaps.newline);
     assert(term.pos.y == 45);
 
     char c;
