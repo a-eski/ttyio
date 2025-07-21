@@ -32,7 +32,7 @@ static struct termios otios;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 
-void fatal__(const char* fmt, ...)
+void fatal__(const char* restrict fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -87,6 +87,14 @@ void term_init()
     }
 }
 
+/* Just reinits the term variable, doesn't free memory from unibilium or touch tcaps. */
+void term_reinit__()
+{
+    term = (Terminal){0};
+    term.size = term_size_get__();
+    assert(term.size.x && term.size.y);
+}
+
 void term_reset()
 {
     fflush(stdout);
@@ -96,31 +104,49 @@ void term_reset()
     unibi_destroy(uterm);
 }
 
-void term_y_update__(int printed)
+void term_y_update__(const int printed)
 {
     if (term.pos.y < term.size.y - 1) {
         if (!printed)  {
             ++term.pos.y;
         }
-        else {
-            term.pos.y += (int)(printed / term.size.x);
+        else if (term.pos.x == term.size.x - 1 && printed == 1) {
+            ++term.pos.y;
+        }
+        else if (term.pos.x + printed - 1 >= term.size.x) {
+            double new_y = term.pos.x + printed / (double)term.size.x;
+            if (new_y < 1) {
+                return;
+            }
+            term.pos.y += (size_t)new_y;
+            if (term.pos.y > term.size.y) {
+                term.pos.y = term.size.y - 1;
+            }
         }
     }
+    assert(term.pos.y < term.size.y);
 }
 
-void term_size_update__(int printed)
+void term_size_update__(const int printed)
 {
     assert(printed != EOF);
-    if (!term.size.x)
-        fatal__("\nTerm size not set.\n");
+#ifndef NDEBUG
+    if (!term.size.x || !term.size.y) {
+        fatal__("\nFatal error: term size not set.\n");
+    }
+#endif
+    if (!printed) {
+        return;
+    }
 
-    if (printed + term.pos.x + 1 > term.size.x) {
+    if (printed + term.pos.x > term.size.x - 1) {
         term_y_update__(printed);
-        term.pos.x = printed == 1 ? 1 : (printed % term.size.x) + 1;
+        term.pos.x = printed == 1 ? 0 : (printed % term.size.x);
     }
     else {
         term.pos.x += printed == 1 ? 1 : printed + 1;
     }
+    assert(term.pos.x < term.size.x);
 }
 
 int term_putc(const char c)
@@ -131,7 +157,23 @@ int term_putc(const char c)
     return 1;
 }
 
-int term_write(const char* buf, const size_t n)
+int term_fputc(FILE* restrict file, const char c)
+{
+    [[maybe_unused]] int printed = write(fileno(file), &c, 1);
+    assert(printed != EOF && printed == 1);
+    term_size_update__(1);
+    return 1;
+}
+
+int term_dputc(const int fd, const char c)
+{
+    [[maybe_unused]] int printed = write(fd, &c, 1);
+    assert(printed != EOF && printed == 1);
+    term_size_update__(1);
+    return 1;
+}
+
+int term_write(const char* restrict buf, const size_t n)
 {
     int printed = write(STDOUT_FILENO, buf, n);
     assert(printed != EOF && (size_t)printed == n);
@@ -139,7 +181,7 @@ int term_write(const char* buf, const size_t n)
     return printed;
 }
 
-int term_writeln(const char* buf, const size_t n)
+int term_writeln(const char* restrict buf, const size_t n)
 {
     int printed = write(STDOUT_FILENO, buf, n);
     assert(printed != EOF && (size_t)printed == n);
@@ -148,7 +190,7 @@ int term_writeln(const char* buf, const size_t n)
     return printed;
 }
 
-int term_fwrite(const int fd, const char* buf, const size_t n)
+int term_fwrite(const int fd, const char* restrict buf, const size_t n)
 {
     int printed = write(fd, buf, n);
     assert(printed != EOF && (size_t)printed == n);
@@ -156,7 +198,7 @@ int term_fwrite(const int fd, const char* buf, const size_t n)
     return printed;
 }
 
-int term_fwriteln(const int fd, const char* buf, const size_t n)
+int term_fwriteln(const int fd, const char* restrict buf, const size_t n)
 {
     int printed = write(fd, buf, n);
     assert(printed != EOF && (size_t)printed == n);
@@ -274,17 +316,9 @@ int term_perror(const char* restrict msg)
     return printed;
 }
 
-int term_send(cap* restrict c)
+void term_send_update__(cap* restrict c);
+inline void term_send_update__(cap* restrict c)
 {
-    return term_dsend(STDOUT_FILENO, c);
-}
-
-int term_fsend(cap* restrict c, FILE* restrict file)
-{
-    assert(c && c->len);
-    fwrite(c->val, sizeof(char), c->len, file);
-    fflush(file);
-
     switch (c->type) {
     case CAP_BS:
         --term.pos.x;
@@ -317,10 +351,42 @@ int term_fsend(cap* restrict c, FILE* restrict file)
     case CAP_NEWLINE:
         term.pos.x = 0;
         term_y_update__(0);
+        break;
+    case CAP_LINE_GOTO_BOL:
+        term.pos.x = 0;
+        break;
     default:
         break;
     }
 
+    if (term.pos.x >= term.size.x) {
+        term.pos.x = term.size.x % term.pos.x;
+    }
+}
+
+int term_send(cap* restrict c)
+{
+    assert(c && c->len);
+    if (write(STDOUT_FILENO, c->val, c->len) == -1)
+        return 1;
+    fflush(stdout);
+
+    term_send_update__(c);
+    assert(term.pos.y <= term.size.y);
+    assert(term.pos.x <= term.size.x);
+    return 0;
+}
+
+int term_fsend(cap* restrict c, FILE* restrict file)
+{
+    assert(c && c->len);
+    fwrite(c->val, sizeof(char), c->len, file);
+    fflush(file);
+
+    term_send_update__(c);
+
+    assert(term.pos.y < term.size.y);
+    assert(term.pos.x < term.size.x);
     return 0;
 }
 
@@ -331,41 +397,7 @@ int term_dsend(const int fd, cap* restrict c)
         return 1;
     fflush(stdout);
 
-    switch (c->type) {
-    case CAP_BS:
-        --term.pos.x;
-        break;
-    case CAP_CURSOR_HOME: {
-        term.pos.x = 0;
-        term.pos.y = 0;
-        break;
-    }
-    case CAP_CURSOR_RIGHT:
-        ++term.pos.x;
-        break;
-    case CAP_CURSOR_LEFT:
-        --term.pos.x;
-        break;
-    case CAP_CURSOR_UP:
-        --term.pos.y;
-        break;
-    case CAP_CURSOR_DOWN:
-        ++term.pos.y;
-        break;
-    case CAP_CURSOR_SAVE:
-        term.saved_pos.x = term.pos.x;
-        term.saved_pos.y = term.pos.y;
-        break;
-    case CAP_CURSOR_RESTORE:
-        term.pos.x = term.saved_pos.x;
-        term.pos.y = term.saved_pos.y;
-        break;
-    case CAP_NEWLINE:
-        term.pos.x = 0;
-        term_y_update__(0);
-    default:
-        break;
-    }
+    term_send_update__(c);
 
     return 0;
 }
@@ -421,10 +453,10 @@ int term_color_bg_set(int color)
     return 0;
 }
 
-int term_color_reset()
+/*int term_color_reset()
 {
     return term_send(&tcaps.color_reset);
-}
+}*/
 
 int term_goto_prev_eol()
 {
@@ -432,6 +464,7 @@ int term_goto_prev_eol()
         constexpr size_t size = 64;
         char buf[size] = {0};
         assert(term.pos.y > 0);
+        // if y is 0 scroll up?
         size_t len = unibi_run(tcaps.cursor_pos.val,
                         (unibi_var_t[9]){
                             [0] = unibi_var_from_num(term.pos.y == 0 ? 0 : term.pos.y - 1),
@@ -442,14 +475,22 @@ int term_goto_prev_eol()
         if (write(STDOUT_FILENO, buf, len) == -1)
             return 1;
         fflush(stdout);
-        term.pos.x = term.size.x - term.pos.x - 1;
+        term.pos.x = term.size.x - 1;
         --term.pos.y;
+
+        assert(term.pos.y < term.size.y);
+        assert(term.pos.x < term.size.x);
         return 0;
     }
-    if (tcaps.line_goto_prev_eol.fallback >= FB_FIRST) {
+    if (tcaps.line_goto_prev_eol.fallback >= FB_NONE) {
         term_send(&tcaps.cursor_up);
         term_send_n(&tcaps.cursor_right, term.size.x - term.pos.x - 1);
         fflush(stdout);
+        term.pos.x = term.size.x - 1;
+        --term.pos.y;
+
+        assert(term.pos.y < term.size.y);
+        assert(term.pos.x < term.size.x);
         return 0;
     }
 

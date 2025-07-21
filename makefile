@@ -2,6 +2,7 @@ STD = -std=c2x
 CC ?= gcc
 DESTDIR ?= /bin
 RELEASE ?= 0
+DEFINES ?=
 
 main_flags = -Wall -Wextra -Werror -pedantic -pedantic-errors -Wsign-conversion -Wformat=2 -Wshadow -Wvla -fstack-protector-all -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wnested-externs -Winline -Wdisabled-optimization -Wunreachable-code -Wchar-subscripts
 
@@ -23,10 +24,10 @@ endif
 
 ifeq ($(RELEASE), 1)
 	CFLAGS ?= $(release_flags)
-	cc_with_flags = $(CC) $(STD) $(CFLAGS)
+	cc_with_flags = $(CC) $(STD) $(CFLAGS) $(DEFINES)
 else
 	CFLAGS ?= $(debug_flags)
-	cc_with_flags = $(CC) $(STD) $(CFLAGS)
+	cc_with_flags = $(CC) $(STD) $(CFLAGS) $(DEFINES)
 endif
 
 ifneq ($(OS),Windows_NT)
