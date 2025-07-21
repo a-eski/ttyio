@@ -14,7 +14,8 @@ release_flags = $(main_flags) -flto=6 -s -O3 -ffast-math -march=native -DNDEBUG
 
 fuzz_flags = $(debug_flags) -fsanitize=fuzzer -DNDEBUG
 
-objects = obj/main.o obj/ttyterm.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
+# objects = obj/main.o
+objects = obj/ttyterm.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
 target = u
 
 ifeq ($(CC), gcc)

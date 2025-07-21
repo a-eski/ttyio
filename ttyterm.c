@@ -12,9 +12,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+#ifndef _Win32
 #include <sys/ioctl.h>
 #include <termios.h>
-#include <unistd.h>
+#else // MSYS2
+#include <windows.h>
+#endif /* ifndef _Win32 */
 
 #include "lib/unibilium.h"
 #include "tcaps.h"
@@ -47,9 +52,27 @@ void fatal__(const char* fmt, ...)
 
 Coordinates term_size_get__()
 {
+#ifndef _Win32
     struct winsize window;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &window);
     return (Coordinates){.x = window.ws_col, .y = window.ws_row};
+#else
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+    // Get the handle to the standard output
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    if (!GetConsoleScreenBufferInfo(hStdout, &csbi)) {
+        fprintf(stderr, "Error getting console screen buffer info.\n");
+        return (Coordinates){};
+    }
+
+    int columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    int rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+
+    printf("Terminal size: %d columns x %d rows\n", columns, rows);
+    return (Coordinates){.x = columns, .y = rows};
+#endif /* ifndef _Win32 */
 }
 
 void term_init()
@@ -69,6 +92,8 @@ void term_init()
         exit(EXIT_FAILURE);
     }
 
+#ifndef _Win32
+
     if (tcgetattr(STDIN_FILENO, &otios) != 0) {
         perror("Could not get terminal settings");
         exit(EXIT_FAILURE);
@@ -85,6 +110,7 @@ void term_init()
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &tios) != 0) {
         perror("Could not set terminal settings");
     }
+#endif /* ifndef _Win32 */
 }
 
 void term_reset()
