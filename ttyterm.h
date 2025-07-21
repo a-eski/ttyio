@@ -33,11 +33,14 @@ void term_reset();
 
 /* Output, tracks pos of cursor for you and stores in term */
 int term_putc(const char c);
+int term_fputc(FILE* restrict file, const char c);
+int term_dputc(int fd, const char c);
 
 int term_write(const char* restrict buf, const size_t n);
 int term_writeln(const char* restrict buf, const size_t n);
 int term_fwrite(const int fd, const char* restrict buf, const size_t n);
 int term_fwriteln(const int fd, const char* restrict buf, const size_t n);
+// TODO: term_dwrite, term_dwriteln?
 
 int term_puts(const char* restrict str);
 int term_fputs(const char* restrict str, FILE* restrict file);
@@ -72,7 +75,8 @@ void term_fsend_n(cap* restrict c, const size_t n, FILE* restrict file);
 int term_color_set(const int color);
 int term_color_bg_set(const int color);
 // can also reset colors with 'term_send(&tcaps.color_reset)'
-int term_color_reset();
+#define term_color_reset() term_send(&tcaps.color_reset)
+// int term_color_reset();
 
 /* Advanced Output which can have multiple fallbacks.
  * Fallback handling is in ttyterm, tcaps just determines which method to use.
