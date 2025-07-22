@@ -1,21 +1,24 @@
 STD = -std=c2x
-CC ?= gcc
+CC = clang
 DESTDIR ?= /bin
 RELEASE ?= 0
 DEFINES ?=
 
 main_flags = -Wall -Wextra -Werror -pedantic -pedantic-errors -Wsign-conversion -Wformat=2 -Wshadow -Wvla -fstack-protector-all -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wnested-externs -Winline -Wdisabled-optimization -Wunreachable-code -Wchar-subscripts
 
-debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2 -fsanitize=address,undefined,leak -g
+debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2
+# -fsanitize=address,undefined,leak -g
 # -fprofile-arcs -ftest-coverage
 
 test_flags =  $(debug_flags)
 
-release_flags = $(main_flags) -flto=6 -s -O3 -ffast-math -march=native -DNDEBUG
+release_flags = $(main_flags) -flto -O3 -ffast-math -march=native -DNDEBUG
+# -flot=6 -s
 
 fuzz_flags = $(debug_flags) -fsanitize=fuzzer -DNDEBUG
 
-objects = obj/main.o obj/ttyterm.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
+objects = obj/main.o obj/ttyterm.o obj/terminfo.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
+# objects = obj/ttyterm.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
 target = u
 
 ifeq ($(CC), gcc)

@@ -5,6 +5,14 @@
 
 #include "ttyterm.h"
 
+#if defined(__MINGW64__)
+#   define SIZE_T_FMT "%llu"
+#elif defined(__MINGW32__)
+#   define SIZE_T_FMT "%lu"
+#else
+#   define SIZE_T_FMT "%zu"
+#endif
+
 /* Internal testing method that reinits the term variable, doesn't free memory from unibilium or touch tcaps. */
 void term_reinit__();
 /* Internal method that updates x and y, used here for testing */
@@ -196,11 +204,11 @@ void moving_around_and_rewriting_test()
     assert(term.pos.y == 8);
     assert(term.pos.x == 8);
 
-    term_print("term.pos.x %zu, term.pos.y %zu ", term.pos.x, term.pos.y);
+    term_print("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT " ", term.pos.x, term.pos.y);
     assert(term.pos.y == 8);
     assert(term.pos.x == 36);
 
-    term_println("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
+    term_println("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
     assert(term.pos.y == 9);
     assert(!term.pos.x);
 
@@ -256,11 +264,11 @@ void fg_and_bg_color_test()
 
 void println_test()
 {
-    term_println("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
+    term_println("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
     assert(term.pos.y == 15);
     assert(!term.pos.x);
 
-    term_println("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
+    term_println("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
     assert(term.pos.y == 16);
     assert(!term.pos.x);
 }
@@ -307,12 +315,12 @@ void multiline_test()
     multiline(3.4);
     assert(term.pos.y == 24);
 
-    term_println("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
+    term_println("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
     term_send_n(&tcaps.newline, 3);
     assert(term.pos.y == 28);
     assert(!term.pos.x);
 
-    term_println("term.size.x %zu, term.size.y %zu", term.size.x, term.size.y);
+    term_println("term.size.x " SIZE_T_FMT ", term.size.y " SIZE_T_FMT, term.size.x, term.size.y);
     assert(term.pos.y == 29);
     assert(!term.pos.x);
 
@@ -396,13 +404,13 @@ int main()
     assert(term.pos.y == 45);
     multiline(.8);
     assert(term.pos.y == 45);
-    term_print("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
+    term_print("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
     assert(term.pos.y == 45);
 
     term_goto_prev_eol();
     assert(term.pos.y == 44);
     assert(term.pos.x == term.size.x - 1);
-    term_print("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
+    term_print("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
 
     char c;
     if (read(STDIN_FILENO, &c, 1) == -1)

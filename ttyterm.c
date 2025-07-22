@@ -12,9 +12,44 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ioctl.h>
-#include <termios.h>
 #include <unistd.h>
+
+#include "terminfo.h"
+
+#if !defined(_WIN32) && !defined(_WIN64)
+
+#   include <sys/ioctl.h>
+
+#   include <termios.h>
+
+static struct termios otios;
+#else
+
+#   include <windows.h>
+
+#   ifndef unreachable
+#       define unreachable()
+#   endif /* ifndef unreachable */
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+int win_vdprintf(const int fd, const char* restrict format, va_list args) {
+    char buffer[4096];
+    int len = vsnprintf(buffer, sizeof(buffer), format, args);
+    if (len < 0)
+        return EOF;
+
+    // write only the bytes vsnprintf produced
+    return write(fd, buffer, (unsigned int)len);
+}
+#pragma GCC diagnostic pop
+
+#   define vdprintf(fd, fmt, args) win_vdprintf(fd, fmt, args)
+
+#   define setenv(name, value, replace) _putenv_s(name, value)
+
+static DWORD omode;
+#endif /* if !defined(_WIN32) && !defined(_WIN64) */
 
 #include "lib/unibilium.h"
 #include "tcaps.h"
@@ -24,7 +59,6 @@ unibi_term* uterm;
 termcaps tcaps;
 Terminal term;
 
-static struct termios otios;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
@@ -47,9 +81,28 @@ void fatal__(const char* restrict fmt, ...)
 
 Coordinates term_size_get__()
 {
+#if !defined(_WIN32) && !defined(_WIN64)
     struct winsize window;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &window);
     return (Coordinates){.x = window.ws_col, .y = window.ws_row};
+#else
+
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hStdout == INVALID_HANDLE_VALUE) {
+        perror("Error loading stdout handle");
+        fatal__("\nCould not get screen info to determine size.\n");
+    }
+
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (!GetConsoleScreenBufferInfo(hStdout, &csbi)) {
+        fatal__("\nCould not get screen info to determine size.\n");
+    }
+
+    int columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    int rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+
+    return (Coordinates){.x = columns, .y = rows};
+#endif
 }
 
 void term_init()
@@ -58,12 +111,24 @@ void term_init()
     term.size = term_size_get__();
     assert(term.size.x && term.size.y);
 
-    uterm = unibi_from_term(getenv("TERM"));
-    if (!uterm)
+    char* term_name = getenv("TERM");
+    if (term_name) {
+        uterm = unibi_from_term(term_name);
+    }
+
+    if (!uterm) {
+        char* term_type;
+        uterm = terminfo_from_builtin(term_name, &term_type);
+        setenv("TERM", term_type, 1);
+    }
+
+    if (!uterm) {
         fatal__("\nCan't find TERM from environment variables. Specify a terminal type with `setenv TERM <yourtype>'.\n");
+    }
 
     tcaps_init();
 
+#if !defined(_WIN32) && !defined(_WIN64)
     if (!isatty(STDIN_FILENO)) {
         term_fprint(stderr, "Not running in a terminal.\n");
         exit(EXIT_FAILURE);
@@ -73,7 +138,6 @@ void term_init()
         perror("Could not get terminal settings");
         exit(EXIT_FAILURE);
     }
-
     // mouse support? investigate
     // printf("\x1b[?1049h\x1b[0m\x1b[2J\x1b[?1003h\x1b[?1015h\x1b[?1006h\x1b[?25l");
 
@@ -85,6 +149,30 @@ void term_init()
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &tios) != 0) {
         perror("Could not set terminal settings");
     }
+#else
+    HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+    if (hStdin == INVALID_HANDLE_VALUE) {
+        perror("Error loading stdin handle");
+        fatal__("\nCould not get terminal info to set to noncanonical mode.\n");
+    }
+
+    DWORD mode;
+    if (!GetConsoleMode(hStdin, &mode)) {
+        perror("Error loading console mode");
+        fatal__("\nCould not get terminal info to set to noncanonical mode.\n");
+    }
+    omode = mode;
+
+    // Disable line input and echo input
+    mode &= ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+
+    // mode &= ~(ENABLE_PROCESSED_INPUT);
+
+    if (!SetConsoleMode(hStdin, mode)) {
+        perror("Error setting console mode");
+        fatal__("\nCould not set terminal info to set to noncanonical mode.\n");
+    }
+#endif
 }
 
 /* Just reinits the term variable, doesn't free memory from unibilium or touch tcaps. */
@@ -98,9 +186,16 @@ void term_reinit__()
 void term_reset()
 {
     fflush(stdout);
+
+#if !defined(_WIN32) && !defined(_WIN64)
     if (tcsetattr(STDIN_FILENO, TCSANOW, &otios) != 0) {
         perror("Could not restore terminal settings");
     }
+#else
+    HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+    SetConsoleMode(hStdin, omode);
+#endif /* if !defined(_WIN32) && !defined(_WIN64) */
+
     unibi_destroy(uterm);
 }
 
