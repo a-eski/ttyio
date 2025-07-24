@@ -16,12 +16,14 @@
 
 
 
-// Definitions needed for MSYS2 environments and Apple
-#if defined(_WIN32) || defined(_WIN64) || defined(__APPLE__)
+// Definitions needed for cross-compilation from windows and Apple
+#if defined(_WIN32) || defined(_WIN64) || defined(__APPLE__) && (!defined(__MINGW32__) && !defined(__MINGW64__))
 
 #   ifndef unreachable
 #       define unreachable()
 #   endif /* ifndef unreachable */
+
+#   include <stdbool.h>
 
 #endif /*  defined(_WIN32) || defined(_WIN64) || defined(__APPLE__) */
 
