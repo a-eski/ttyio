@@ -1,5 +1,5 @@
 STD = -std=c2x
-CC = clang
+CC = gcc
 DESTDIR ?= /bin
 RELEASE ?= 0
 DEFINES ?=
@@ -19,6 +19,7 @@ fuzz_flags = $(debug_flags) -fsanitize=fuzzer -DNDEBUG
 
 objects = obj/main.o obj/ttyterm.o obj/terminfo.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
 # objects = obj/ttyterm.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
+# main.c ttyterm.c terminfo.c tcaps.c lib/unibilium.c lib/uninames.c lib/uniutil.c
 target = u
 
 ifeq ($(CC), gcc)
@@ -66,6 +67,11 @@ release:
 # Debug build
 debug :
 	make -B RELEASE=0
+
+# Cross compilation
+ZIG_TARGET ?= aarch64-windows-gnu
+zig:
+	zig cc -target $(ZIG_TARGET) $(TTYTERM_DEFINES) main.c ttyterm.c terminfo.c tcaps.c lib/unibilium.c lib/uninames.c lib/uniutil.c
 
 # Format the project
 clang_format :

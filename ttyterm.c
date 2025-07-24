@@ -1,5 +1,6 @@
 /* Copyright ttyterm (C) by Alex Eski 2025 */
 /* Licensed under GPLv3, see LICENSE for more information. */
+/* ttyterm.h: public interface implementation for the ttyterm library */
 
 #ifndef _POXIC_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
@@ -15,21 +16,31 @@
 #include <unistd.h>
 
 #include "terminfo.h"
+#include "ttyterm.h"
 
+#include "lib/unibilium.h"
+#include "tcaps.h"
+#include "ttyterm.h"
+#include "ttyplatform.h" // used for macros
+
+unibi_term* uterm;
+termcaps tcaps;
+Terminal term;
+
+static enum input_type tty_input_mode__;
+
+// For unix like systems
 #if !defined(_WIN32) && !defined(_WIN64)
 
 #   include <sys/ioctl.h>
 
 #   include <termios.h>
 
-static struct termios otios;
+static struct termios otios__;
+// For windows
 #else
 
 #   include <windows.h>
-
-#   ifndef unreachable
-#       define unreachable()
-#   endif /* ifndef unreachable */
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
@@ -48,17 +59,8 @@ int win_vdprintf(const int fd, const char* restrict format, va_list args) {
 
 #   define setenv(name, value, replace) _putenv_s(name, value)
 
-static DWORD omode;
+static DWORD omode__;
 #endif /* if !defined(_WIN32) && !defined(_WIN64) */
-
-#include "lib/unibilium.h"
-#include "tcaps.h"
-#include "ttyterm.h"
-
-unibi_term* uterm;
-termcaps tcaps;
-Terminal term;
-
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
@@ -105,7 +107,7 @@ Coordinates term_size_get__()
 #endif
 }
 
-void term_init()
+void term_init(enum input_type input_type)
 {
     term = (Terminal){0};
     term.size = term_size_get__();
@@ -128,20 +130,25 @@ void term_init()
 
     tcaps_init();
 
+    tty_input_mode__ = input_type;
+    if (input_type == TTY_CANONICAL_MODE) {
+        return;
+    }
+
 #if !defined(_WIN32) && !defined(_WIN64)
     if (!isatty(STDIN_FILENO)) {
         term_fprint(stderr, "Not running in a terminal.\n");
         exit(EXIT_FAILURE);
     }
 
-    if (tcgetattr(STDIN_FILENO, &otios) != 0) {
+    if (tcgetattr(STDIN_FILENO, &otios__) != 0) {
         perror("Could not get terminal settings");
         exit(EXIT_FAILURE);
     }
     // mouse support? investigate
     // printf("\x1b[?1049h\x1b[0m\x1b[2J\x1b[?1003h\x1b[?1015h\x1b[?1006h\x1b[?25l");
 
-    struct termios tios = otios;
+    struct termios tios = otios__;
     tios.c_lflag &= (tcflag_t) ~(ICANON | ECHO);
     tios.c_cc[VMIN] = 1;
     tios.c_cc[VTIME] = 0;
@@ -161,7 +168,7 @@ void term_init()
         perror("Error loading console mode");
         fatal__("\nCould not get terminal info to set to noncanonical mode.\n");
     }
-    omode = mode;
+    omode__ = mode;
 
     // Disable line input and echo input
     mode &= ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
@@ -175,7 +182,10 @@ void term_init()
 #endif
 }
 
-/* Just reinits the term variable, doesn't free memory from unibilium or touch tcaps. */
+/* term_reinit__ *internal*
+ * Just reinits the term variable, doesn't free memory from unibilium or touch tcaps.
+ * Useful for testing.
+ */
 void term_reinit__()
 {
     term = (Terminal){0};
@@ -187,16 +197,19 @@ void term_reset()
 {
     fflush(stdout);
 
+    unibi_destroy(uterm);
+    if (tty_input_mode__ == TTY_NONCANONICAL_MODE) {
+        return;
+    }
+
 #if !defined(_WIN32) && !defined(_WIN64)
-    if (tcsetattr(STDIN_FILENO, TCSANOW, &otios) != 0) {
+    if (tcsetattr(STDIN_FILENO, TCSANOW, &otios__) != 0) {
         perror("Could not restore terminal settings");
     }
 #else
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-    SetConsoleMode(hStdin, omode);
+    SetConsoleMode(hStdin, omode__);
 #endif /* if !defined(_WIN32) && !defined(_WIN64) */
-
-    unibi_destroy(uterm);
 }
 
 void term_y_update__(const int printed)
@@ -518,14 +531,14 @@ void term_dsend_n(const int fd, cap* restrict c, const size_t n)
     }
 }
 
+#define TTY_BUF_SIZE 64
 int term_color_set(int color)
 {
     if (!tcaps.color_max)
         return 0;
 
-    constexpr size_t size = 64;
-    char buf[size] = {0};
-    size_t len = unibi_run(tcaps.color_set.val, (unibi_var_t[9]){[0] = unibi_var_from_num(color)}, buf, size);
+    char buf[TTY_BUF_SIZE] = {0};
+    size_t len = unibi_run(tcaps.color_set.val, (unibi_var_t[9]){[0] = unibi_var_from_num(color)}, buf, TTY_BUF_SIZE);
 
     if (write(STDOUT_FILENO, buf, len) == -1)
         return 1;
@@ -538,9 +551,8 @@ int term_color_bg_set(int color)
     if (!tcaps.color_max)
         return 0;
 
-    constexpr size_t size = 64;
-    char buf[size] = {0};
-    size_t len = unibi_run(tcaps.color_bg_set.val, (unibi_var_t[9]){[0] = unibi_var_from_num(color)}, buf, size);
+    char buf[TTY_BUF_SIZE] = {0};
+    size_t len = unibi_run(tcaps.color_bg_set.val, (unibi_var_t[9]){[0] = unibi_var_from_num(color)}, buf, TTY_BUF_SIZE);
 
     if (write(STDOUT_FILENO, buf, len) == -1)
         return 1;
@@ -548,16 +560,10 @@ int term_color_bg_set(int color)
     return 0;
 }
 
-/*int term_color_reset()
-{
-    return term_send(&tcaps.color_reset);
-}*/
-
 int term_goto_prev_eol()
 {
     if (tcaps.line_goto_prev_eol.fallback == FB_NONE) {
-        constexpr size_t size = 64;
-        char buf[size] = {0};
+        char buf[TTY_BUF_SIZE] = {0};
         assert(term.pos.y > 0);
         // if y is 0 scroll up?
         size_t len = unibi_run(tcaps.cursor_pos.val,
@@ -565,7 +571,7 @@ int term_goto_prev_eol()
                             [0] = unibi_var_from_num(term.pos.y == 0 ? 0 : term.pos.y - 1),
                             [1] = unibi_var_from_num(term.size.x - 1)
                         },
-                        buf, size);
+                        buf, TTY_BUF_SIZE);
 
         if (write(STDOUT_FILENO, buf, len) == -1)
             return 1;
@@ -590,6 +596,7 @@ int term_goto_prev_eol()
     }
 
     unreachable();
+    return -1;
 }
 
 #pragma GCC diagnostic pop

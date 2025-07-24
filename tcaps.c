@@ -5,10 +5,12 @@
 
 #include "lib/unibilium.h"
 #include "tcaps.h"
+#include "ttyplatform.h" // used for including stdbool in case of Apple
 
 extern termcaps tcaps;
 extern unibi_term* uterm;
 
+// Fallback macros
 #define FB_BS "\b \b" /* Keys */
 #define FB_DEL " \b"
 #define FB_NEWLINE "\n"
@@ -34,6 +36,23 @@ extern unibi_term* uterm;
 
 #define FB_COLOR_RESET "\033[0m" /* Colors */
 
+// cap aka capacity macros
+#define cap_New(s, t)                                                                                                  \
+    (cap)                                                                                                              \
+    {                                                                                                                  \
+        .val = (s), .len = strlen((s)), .type = (t)                                                                    \
+    }
+#define cap_New_Lit(s, t)                                                                                              \
+    (cap)                                                                                                              \
+    {                                                                                                                  \
+        .val = (s), .len = sizeof((s)) - 1, .type = (t)                                                                \
+    }
+#define cap_New_s(s, n, t)                                                                                             \
+    (cap)                                                                                                              \
+    {                                                                                                                  \
+        .val = (s), .len = (n), .type = (t)                                                                            \
+    }
+
 #define tcaps_set(str, cap, fb, t)                                                                                     \
 do { \
     if (!str || !*str)                                                                                                 \
@@ -44,7 +63,7 @@ do { \
 
 #define tcaps_set_no_fb(str, cap, t)                                                                                   \
     if (str && *str)                                                                                                   \
-    cap = cap_New(str, t)
+        cap = cap_New(str, t)
 
 void tcaps_init()
 {

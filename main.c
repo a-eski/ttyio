@@ -1,17 +1,11 @@
 #include <assert.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "ttyterm.h"
-
-#if defined(__MINGW64__)
-#   define SIZE_T_FMT "%llu"
-#elif defined(__MINGW32__)
-#   define SIZE_T_FMT "%lu"
-#else
-#   define SIZE_T_FMT "%zu"
-#endif
+#include "ttyplatform.h"
 
 /* Internal testing method that reinits the term variable, doesn't free memory from unibilium or touch tcaps. */
 void term_reinit__();
@@ -44,7 +38,7 @@ void term_y_update_tests()
     // not super relevant for just y...
     // when going to max x (size x - 1), y should not change
     prev_y = term.pos.y;
-    term_y_update__(term.size.x - 1);
+    term_y_update__((int)(term.size.x - 1));
     assert(prev_y == term.pos.y);
     assert(term.pos.y == 3);
 
@@ -57,7 +51,9 @@ void term_y_update_tests()
 
     // when printed is greater than the screen size, y should be size y - 1
     prev_y = term.pos.y;
-    term_y_update__(term.size.x * term.size.y + 2);
+    size_t printed = term.size.x * term.size.y + 2;
+    assert(printed > 0 && printed < INT_MAX);
+    term_y_update__((int)printed);
     assert(prev_y < term.pos.y);
     assert(term.pos.y == term.size.y - 1);
 }
@@ -81,7 +77,8 @@ void term_size_update_tests()
     // when x is on the last position, it should be equals to size x - 1
     prev_x = term.pos.x;
     assert(term.size.x - term.pos.x == term.size.x - 1);
-    term_size_update__(term.size.x - term.pos.x); // term.size.x - term.pos.x AKA 1
+    assert(term.size.x > term.pos.x);
+    term_size_update__((int)(term.size.x - term.pos.x)); // term.size.x - term.pos.x AKA 1
     assert(!term.pos.y);
     assert(prev_x < term.pos.x);
     assert(term.pos.x == term.size.x - 1);
@@ -96,7 +93,8 @@ void term_size_update_tests()
     // when printed is longer than size x, x should wrap around and not be greater than size x
     prev_x = term.pos.x;
     size_t printed = term.size.x * 1.5;
-    term_size_update__(printed);
+    assert(printed > 0 && printed < INT_MAX);
+    term_size_update__((int)printed);
     assert(term.pos.y == 2);
     assert(prev_x < term.pos.x);
     assert(term.pos.x < term.size.x);
@@ -378,7 +376,7 @@ void bg_colors_test()
  */
 int main()
 {
-    term_init();
+    term_init(TTY_NONCANONICAL_MODE);
 
     term_y_update_tests();
     term_reinit__(); // reinit after messing with sizes for testing

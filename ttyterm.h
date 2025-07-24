@@ -1,5 +1,6 @@
 /* Copyright ttyterm (C) by Alex Eski 2025 */
 /* Licensed under GPLv3, see LICENSE for more information. */
+/* ttyterm.h: public interface for the ttyterm library */
 
 #pragma once
 
@@ -28,7 +29,16 @@ typedef struct {
 extern termcaps tcaps;
 extern Terminal term;
 
-void term_init();
+/* enum input_type
+ * Canonical: read line by line, only get the line after user presses enter. a lot of programs work this way.
+ * Noncanonical: read character by character. programs who need control over each input need to use this.
+ */
+enum input_type: char {
+    TTY_CANONICAL_MODE,
+    TTY_NONCANONICAL_MODE
+};
+
+void term_init(enum input_type input_type);
 void term_reset();
 
 /* Output, tracks pos of cursor for you and stores in term */
@@ -74,9 +84,7 @@ void term_fsend_n(cap* restrict c, const size_t n, FILE* restrict file);
  * that is less than tcaps.color_max. */
 int term_color_set(const int color);
 int term_color_bg_set(const int color);
-// can also reset colors with 'term_send(&tcaps.color_reset)'
 #define term_color_reset() term_send(&tcaps.color_reset)
-// int term_color_reset();
 
 /* Advanced Output which can have multiple fallbacks.
  * Fallback handling is in ttyterm, tcaps just determines which method to use.
