@@ -27,6 +27,13 @@
 
 
 
+// Definitions needed for Cygwin
+#if defined(__CYGWIN__)
+#   define strdup __builtin_strdup
+#endif /* defined(__CYGWIN__) */
+
+
+
 // Definitions needed for Apple
 #if defined(__APPLE__)
 #   include <stdbool.h>
