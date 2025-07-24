@@ -6,14 +6,18 @@ DEFINES ?=
 
 main_flags = -Wall -Wextra -Werror -pedantic -pedantic-errors -Wsign-conversion -Wformat=2 -Wshadow -Wvla -fstack-protector-all -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wnested-externs -Winline -Wdisabled-optimization -Wunreachable-code -Wchar-subscripts
 
+# you have to remove sanitizers for environments like cygwin and w64devkit
 debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2
+debug_flags_sanitizers = $(main_flags) -D_FORTIFY_SOURCE=2 -fsanitize=address,undefined,leak -g
 # -fsanitize=address,undefined,leak -g
 # -fprofile-arcs -ftest-coverage
 
 test_flags =  $(debug_flags)
 
+# you may have to remove -flto for environments like w64devkit
 release_flags = $(main_flags) -flto -O3 -ffast-math -march=native -DNDEBUG
-# -flot=6 -s
+# -flto
+# -flto=6 -s
 
 fuzz_flags = $(debug_flags) -fsanitize=fuzzer -DNDEBUG
 
@@ -67,6 +71,8 @@ release:
 # Debug build
 debug :
 	make -B RELEASE=0
+debugsan :
+	make -B RELEASE=0 CFLAGS=$(debug_flags_sanitizers)
 
 # Cross compilation
 ZIG_TARGET ?= aarch64-windows-gnu
