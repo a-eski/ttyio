@@ -8,11 +8,11 @@
 #define TTYPLATFORM_GUARD_H_
 
 // Definitions needed for all unix like envirnoments. Includes unistd in unix like environments
-#if defined(__unix__) || defined(__APPLE__) || defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__)
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__) || defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__)
 
 #   include <unistd.h>
 
-#endif /* ifdef  defined(__unix__) || defined(__APPLE__) || defined(__MINGW32__) || defined(__MINGW64) || defined(__CYGWIN__) */
+#endif /* ifdef  defined(__linux__) || defined(__unix__) || defined(__APPLE__) || defined(__MINGW32__) || defined(__MINGW64) || defined(__CYGWIN__) */
 
 
 

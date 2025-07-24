@@ -2,7 +2,7 @@
 /* Licensed under GPLv3, see LICENSE for more information. */
 /* ttyplatform.c: platform layer implementation for the ttyterm library */
 
-#if !defined(__unix__) && !defined(__APPLE__) && !defined(__MINGW32__) && !defined(__MINGW64) && !defined(__CYGWIN__)
+#if !defined(__linux__) && !defined(__unix__) && !defined(__APPLE__) && !defined(__MINGW32__) && !defined(__MINGW64__) && !defined(__CYGWIN__)
 
 # include <windows.h>
 
