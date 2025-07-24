@@ -6,7 +6,7 @@ DEFINES ?=
 
 main_flags = -Wall -Wextra -Werror -pedantic -pedantic-errors -Wsign-conversion -Wformat=2 -Wshadow -Wvla -fstack-protector-all -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wnested-externs -Winline -Wdisabled-optimization -Wunreachable-code -Wchar-subscripts
 
-# you have to remove sanitizers for environments like cygwin and w64devkit
+# you have to remove sanitizers for environments like cygwin and w64devkit. Can call 'make debugsan' to make a debug build with sanitizers.
 debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2
 debug_flags_sanitizers = $(main_flags) -D_FORTIFY_SOURCE=2 -fsanitize=address,undefined,leak -g
 # -fsanitize=address,undefined,leak -g
@@ -14,8 +14,9 @@ debug_flags_sanitizers = $(main_flags) -D_FORTIFY_SOURCE=2 -fsanitize=address,un
 
 test_flags =  $(debug_flags)
 
-# you may have to remove -flto for environments like w64devkit
-release_flags = $(main_flags) -flto -O3 -ffast-math -march=native -DNDEBUG
+# you may have to remove -flto for environments like w64devkit. Can call 'make releaselto' to make a release build with LTO.
+release_flags = $(main_flags) -O3 -ffast-math -march=native -DNDEBUG
+release_flags_lto = $(main_flags) -flto -O3 -ffast-math -march=native -DNDEBUG
 # -flto
 # -flto=6 -s
 
@@ -67,6 +68,9 @@ obj/%.o: %.c
 # Release build
 release:
 	make RELEASE=1
+
+releaselto:
+	make release CFLAGS=$(release_flags_lto)
 
 # Debug build
 debug :
