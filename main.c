@@ -1,9 +1,11 @@
 #include <assert.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "ttyterm.h"
+#include "ttyplatform.h"
 
 /* Internal testing method that reinits the term variable, doesn't free memory from unibilium or touch tcaps. */
 void term_reinit__();
@@ -36,7 +38,7 @@ void term_y_update_tests()
     // not super relevant for just y...
     // when going to max x (size x - 1), y should not change
     prev_y = term.pos.y;
-    term_y_update__(term.size.x - 1);
+    term_y_update__((int)(term.size.x - 1));
     assert(prev_y == term.pos.y);
     assert(term.pos.y == 3);
 
@@ -49,7 +51,9 @@ void term_y_update_tests()
 
     // when printed is greater than the screen size, y should be size y - 1
     prev_y = term.pos.y;
-    term_y_update__(term.size.x * term.size.y + 2);
+    size_t printed = term.size.x * term.size.y + 2;
+    assert(printed > 0 && printed < INT_MAX);
+    term_y_update__((int)printed);
     assert(prev_y < term.pos.y);
     assert(term.pos.y == term.size.y - 1);
 }
@@ -73,7 +77,8 @@ void term_size_update_tests()
     // when x is on the last position, it should be equals to size x - 1
     prev_x = term.pos.x;
     assert(term.size.x - term.pos.x == term.size.x - 1);
-    term_size_update__(term.size.x - term.pos.x); // term.size.x - term.pos.x AKA 1
+    assert(term.size.x > term.pos.x);
+    term_size_update__((int)(term.size.x - term.pos.x)); // term.size.x - term.pos.x AKA 1
     assert(!term.pos.y);
     assert(prev_x < term.pos.x);
     assert(term.pos.x == term.size.x - 1);
@@ -88,7 +93,8 @@ void term_size_update_tests()
     // when printed is longer than size x, x should wrap around and not be greater than size x
     prev_x = term.pos.x;
     size_t printed = term.size.x * 1.5;
-    term_size_update__(printed);
+    assert(printed > 0 && printed < INT_MAX);
+    term_size_update__((int)printed);
     assert(term.pos.y == 2);
     assert(prev_x < term.pos.x);
     assert(term.pos.x < term.size.x);
@@ -196,11 +202,11 @@ void moving_around_and_rewriting_test()
     assert(term.pos.y == 8);
     assert(term.pos.x == 8);
 
-    term_print("term.pos.x %zu, term.pos.y %zu ", term.pos.x, term.pos.y);
+    term_print("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT " ", term.pos.x, term.pos.y);
     assert(term.pos.y == 8);
     assert(term.pos.x == 36);
 
-    term_println("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
+    term_println("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
     assert(term.pos.y == 9);
     assert(!term.pos.x);
 
@@ -256,11 +262,11 @@ void fg_and_bg_color_test()
 
 void println_test()
 {
-    term_println("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
+    term_println("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
     assert(term.pos.y == 15);
     assert(!term.pos.x);
 
-    term_println("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
+    term_println("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
     assert(term.pos.y == 16);
     assert(!term.pos.x);
 }
@@ -307,12 +313,12 @@ void multiline_test()
     multiline(3.4);
     assert(term.pos.y == 24);
 
-    term_println("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
+    term_println("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
     term_send_n(&tcaps.newline, 3);
     assert(term.pos.y == 28);
     assert(!term.pos.x);
 
-    term_println("term.size.x %zu, term.size.y %zu", term.size.x, term.size.y);
+    term_println("term.size.x " SIZE_T_FMT ", term.size.y " SIZE_T_FMT, term.size.x, term.size.y);
     assert(term.pos.y == 29);
     assert(!term.pos.x);
 
@@ -370,7 +376,7 @@ void bg_colors_test()
  */
 int main()
 {
-    term_init();
+    term_init(TTY_NONCANONICAL_MODE);
 
     term_y_update_tests();
     term_reinit__(); // reinit after messing with sizes for testing
@@ -396,13 +402,13 @@ int main()
     assert(term.pos.y == 45);
     multiline(.8);
     assert(term.pos.y == 45);
-    term_print("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
+    term_print("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
     assert(term.pos.y == 45);
 
     term_goto_prev_eol();
     assert(term.pos.y == 44);
     assert(term.pos.x == term.size.x - 1);
-    term_print("term.pos.x %zu, term.pos.y %zu", term.pos.x, term.pos.y);
+    term_print("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
 
     char c;
     if (read(STDIN_FILENO, &c, 1) == -1)

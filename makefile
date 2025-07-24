@@ -1,21 +1,25 @@
 STD = -std=c2x
-CC ?= gcc
+CC = gcc
 DESTDIR ?= /bin
 RELEASE ?= 0
 DEFINES ?=
 
 main_flags = -Wall -Wextra -Werror -pedantic -pedantic-errors -Wsign-conversion -Wformat=2 -Wshadow -Wvla -fstack-protector-all -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wnested-externs -Winline -Wdisabled-optimization -Wunreachable-code -Wchar-subscripts
 
-debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2 -fsanitize=address,undefined,leak -g
+debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2
+# -fsanitize=address,undefined,leak -g
 # -fprofile-arcs -ftest-coverage
 
 test_flags =  $(debug_flags)
 
-release_flags = $(main_flags) -flto=6 -s -O3 -ffast-math -march=native -DNDEBUG
+release_flags = $(main_flags) -flto -O3 -ffast-math -march=native -DNDEBUG
+# -flot=6 -s
 
 fuzz_flags = $(debug_flags) -fsanitize=fuzzer -DNDEBUG
 
-objects = obj/main.o obj/ttyterm.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
+objects = obj/main.o obj/ttyterm.o obj/terminfo.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
+# objects = obj/ttyterm.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
+# main.c ttyterm.c terminfo.c tcaps.c lib/unibilium.c lib/uninames.c lib/uniutil.c
 target = u
 
 ifeq ($(CC), gcc)
@@ -63,6 +67,11 @@ release:
 # Debug build
 debug :
 	make -B RELEASE=0
+
+# Cross compilation
+ZIG_TARGET ?= aarch64-windows-gnu
+zig:
+	zig cc -target $(ZIG_TARGET) $(TTYTERM_DEFINES) main.c ttyterm.c terminfo.c tcaps.c lib/unibilium.c lib/uninames.c lib/uniutil.c
 
 # Format the project
 clang_format :

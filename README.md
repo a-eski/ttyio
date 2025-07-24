@@ -19,6 +19,19 @@ Still in very very early stages of development.
 
 Props to Neovim maintainers and [unibilium](https://github.com/neovim/unibilium/tree/master).
 
+## Supported Platforms
+
+* Linux/WSL
+  * gcc
+  * clang
+* Windows
+  * MSYS2 (ucrt64, clang64, mingw32, clangarm64)
+  * Cygwin
+  * w64devkit
+* Apple
+  * *only tested compilation, don't have a Mac.*
+  * Tested compilation for both x84_64 and aarch64.
+
 ## Todos
 
 * Have configurable for whether to fall back to ASCII control/escape characters or not.
@@ -53,6 +66,9 @@ Some of these are obvious, but put here just in case they aren't!
 * bg: background, referring to color
 * fg: foreground, referring to color
 * prev: previous
+
+Functions or objects ending in '__' are internal and not meant to be used outside of ttyterm.
+Of course they can be, they are just more likely to change or break your code in future versions if you depend on them.
 
 ## Function definitions
 

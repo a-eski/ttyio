@@ -9,6 +9,8 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include "ttyplatform.h" // used for including stdbool in case of Apple
+
 enum caps {
     CAP_BS,
     CAP_DEL,
@@ -53,22 +55,6 @@ typedef struct {
     enum { FB_NONE, FB_FIRST, FB_SECOND } fallback;
     enum advanced_caps__ type;
 } advanced_cap__;
-
-#define cap_New(s, t)                                                                                                  \
-    (cap)                                                                                                              \
-    {                                                                                                                  \
-        .val = (s), .len = strlen((s)), .type = (t)                                                                    \
-    }
-#define cap_New_Lit(s, t)                                                                                              \
-    (cap)                                                                                                              \
-    {                                                                                                                  \
-        .val = (s), .len = sizeof((s)) - 1, .type = (t)                                                                \
-    }
-#define cap_New_s(s, n, t)                                                                                             \
-    (cap)                                                                                                              \
-    {                                                                                                                  \
-        .val = (s), .len = (n), .type = (t)                                                                            \
-    }
 
 typedef struct {
     cap bs; /* Keys */
