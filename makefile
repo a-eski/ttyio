@@ -69,14 +69,9 @@ obj/%.o: %.c
 release:
 	make RELEASE=1
 
-releaselto:
-	make release CFLAGS=$(release_flags_lto)
-
 # Debug build
 debug :
 	make -B RELEASE=0
-debugsan :
-	make -B RELEASE=0 CFLAGS=$(debug_flags_sanitizers)
 
 # Cross compilation
 ZIG_TARGET ?= aarch64-windows-gnu
