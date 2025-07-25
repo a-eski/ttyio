@@ -2,8 +2,6 @@
 /* Licensed under GPLv3, see LICENSE for more information. */
 /* ttyplatform.h: platform layer for the ttyterm library */
 
-#pragma once
-
 #ifndef TTYPLATFORM_GUARD_H_
 #define TTYPLATFORM_GUARD_H_
 

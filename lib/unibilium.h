@@ -538,6 +538,10 @@ enum unibi_string {
 
 typedef struct unibi_term unibi_term;
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 unibi_term* unibi_dummy(void);
 unibi_term* unibi_from_mem(const char*, size_t);
 void unibi_destroy(unibi_term*);
@@ -616,5 +620,9 @@ void unibi_format(unibi_var_t[26], unibi_var_t[26], const char*, unibi_var_t[9],
                   void*, void (*)(void*, size_t, int, int), void*);
 
 size_t unibi_run(const char*, unibi_var_t[9], char*, size_t);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif /* GUARD_UNIBILIUM_H_ */

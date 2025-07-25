@@ -87,6 +87,10 @@ typedef struct {
 
 } termcaps;
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 /* Init all caps */
 void tcaps_init();
 /* Init all caps but can exclude advanced caps like line_goto_prev_eol */
@@ -101,5 +105,9 @@ void tcaps_init_colors();
 
 /* Advanced cap initiailization */
 void tcaps_init_goto_prev_eol();
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif // !TCAPS_GUARD_H_
