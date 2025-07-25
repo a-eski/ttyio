@@ -5,11 +5,11 @@ DEFINES ?=
 
 main_flags = -Wall -Wextra -Werror -pedantic -pedantic-errors -Wsign-conversion -Wformat=2 -Wshadow -Wvla -fstack-protector-all -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wnested-externs -Winline -Wdisabled-optimization -Wunreachable-code -Wchar-subscripts
 
-# you have to remove sanitizers for environments like cygwin and w64devkit.
+# you may have to remove sanitizers for windows based environments
 debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2 -fsanitize=address,undefined,leak -g
 # -fprofile-arcs -ftest-coverage
 
-# you may have to remove -flto for environments like w64devkit. Can call 'make releaselto' to make a release build with LTO.
+# you may have to remove -flto for windows based environments
 release_flags = $(main_flags) -flto -O3 -ffast-math -march=native -DNDEBUG
 # -flto=6 -s
 

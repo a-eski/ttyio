@@ -42,16 +42,3 @@ obj/%.o: lib/%.c
 
 obj/%.o: %.c
 	$(cc_with_flags) -c $< -o $@
-
-# Release build
-release:
-	make
-
-# Debug build
-debug :
-    make -B CFLAGS=$(debug_flags)
-
-# Clean-up
-.PHONY: clean
-clean :
-	rm $(target) $(objects)
