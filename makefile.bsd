@@ -1,0 +1,57 @@
+STD = -std=c2x
+CC = gcc
+DEFINES ?=
+
+main_flags = -Wall -Wextra -Werror -pedantic -pedantic-errors -Wsign-conversion -Wformat=2 -Wshadow -Wvla -fstack-protector-all -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wnested-externs -Winline -Wdisabled-optimization -Wunreachable-code -Wchar-subscripts
+
+debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2 -fsanitize=address,undefined,leak -g
+# -fprofile-arcs -ftest-coverage
+
+test_flags =  $(debug_flags)
+
+release_flags = $(main_flags) -flto -O3 -ffast-math -march=native -DNDEBUG
+# -flto=6 -s
+
+fuzz_flags = $(debug_flags) -fsanitize=fuzzer -DNDEBUG
+
+objects = obj/main.o obj/ttyterm.o obj/terminfo.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
+# objects = obj/ttyterm.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
+# gcc main.c ttyterm.c terminfo.c tcaps.c lib/unibilium.c lib/uninames.c lib/uniutil.c -o ttyterm
+target = u
+
+CFLAGS ?= $(release_flags)
+cc_with_flags = $(CC) $(STD) $(CFLAGS) $(DEFINES)
+
+TERMINFO="$(shell ncursesw6-config --terminfo 2>/dev/null || \
+                         ncurses6-config  --terminfo 2>/dev/null || \
+                         ncursesw5-config --terminfo 2>/dev/null || \
+                         ncurses5-config  --terminfo 2>/dev/null || \
+                         echo "/usr/share/terminfo")"
+TERMINFO_DIRS="$(shell ncursesw6-config --terminfo-dirs 2>/dev/null || \
+                         ncurses6-config  --terminfo-dirs 2>/dev/null || \
+                         ncursesw5-config --terminfo-dirs 2>/dev/null || \
+                         ncurses5-config  --terminfo-dirs 2>/dev/null || \
+                         echo "/etc/terminfo:/lib/terminfo:/usr/share/terminfo:/usr/lib/terminfo:/usr/local/share/terminfo:/usr/local/lib/terminfo")"
+TTYTERM_DEFINES ?= -DTERMINFO='$(TERMINFO)' -DTERMINFO_DIRS='$(TERMINFO_DIRS)'
+
+$(target) : $(objects)
+	$(cc_with_flags) -o $(target) $(objects)
+
+obj/%.o: lib/%.c
+	$(cc_with_flags) $(TTYTERM_DEFINES) -c $< -o $@
+
+obj/%.o: %.c
+	$(cc_with_flags) -c $< -o $@
+
+# Release build
+release:
+	make
+
+# Debug build
+debug :
+    make -B CFLAGS=$(debug_flags)
+
+# Clean-up
+.PHONY: clean
+clean :
+	rm $(target) $(objects)
