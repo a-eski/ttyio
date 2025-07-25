@@ -31,6 +31,8 @@ Props to Neovim maintainers and [unibilium](https://github.com/neovim/unibilium/
 * Apple
   * *only tested compilation, don't have a Mac.*
   * Tested compilation for both x84_64 and aarch64.
+* BSDs
+  * FreeBSD *tested in VM*
 
 ## Todos
 

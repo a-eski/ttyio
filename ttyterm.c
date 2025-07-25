@@ -467,7 +467,7 @@ inline void term_send_update__(cap* restrict c)
         break;
     }
 
-    if (term.pos.x >= term.size.x) {
+    if (term.pos.x >= term.size.x && term.pos.x > 0) {
         term.pos.x = term.size.x % term.pos.x;
     }
 }

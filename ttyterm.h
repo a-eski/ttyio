@@ -2,8 +2,6 @@
 /* Licensed under GPLv3, see LICENSE for more information. */
 /* ttyterm.h: public interface for the ttyterm library */
 
-#pragma once
-
 #ifndef TERM_GUARD_H_
 #define TERM_GUARD_H_
 
@@ -26,9 +24,6 @@ typedef struct {
     Coordinates saved_pos;
 } Terminal;
 
-extern termcaps tcaps;
-extern Terminal term;
-
 /* enum input_type
  * Canonical: read line by line, only get the line after user presses enter. a lot of programs work this way.
  * Noncanonical: read character by character. programs who need control over each input need to use this.
@@ -37,6 +32,13 @@ enum input_type: char {
     TTY_CANONICAL_MODE,
     TTY_NONCANONICAL_MODE
 };
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
+extern termcaps tcaps;
+extern Terminal term;
 
 void term_init(enum input_type input_type);
 void term_reset();
@@ -90,5 +92,9 @@ int term_color_bg_set(const int color);
  * Fallback handling is in ttyterm, tcaps just determines which method to use.
  */
 int term_goto_prev_eol();
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif /* !TERM_GUARD_H_ */
