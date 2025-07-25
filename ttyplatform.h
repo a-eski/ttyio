@@ -8,7 +8,7 @@
 #define TTYPLATFORM_GUARD_H_
 
 // Definitions needed for all unix like envirnoments. Includes unistd in unix like environments
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__) || defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__)
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__) || defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
 
 #   include <unistd.h>
 
@@ -16,8 +16,8 @@
 
 
 
-// Definitions needed for cross-compilation from windows and Apple
-#if defined(_WIN32) || defined(_WIN64) || defined(__APPLE__) && (!defined(__MINGW32__) && !defined(__MINGW64__))
+// Definitions needed for cross-compilation from Windows to other platforms. Also needed for Apple and the BSDs.
+#if defined(_WIN32) || defined(_WIN64) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) && (!defined(__MINGW32__) && !defined(__MINGW64__))
 
 #   ifndef unreachable
 #       define unreachable()
@@ -33,13 +33,6 @@
 #if defined(__CYGWIN__)
 #   define strdup __builtin_strdup
 #endif /* defined(__CYGWIN__) */
-
-
-
-// Definitions needed for Apple
-#if defined(__APPLE__)
-#   include <stdbool.h>
-#endif /* defined(__APPLE__) */
 
 
 
