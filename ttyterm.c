@@ -42,9 +42,6 @@ static struct termios otios__;
 
 #   include <windows.h>
 
-int win_vdprintf(const int fd, const char* restrict format, va_list args)
-    __attribute__ ((__format__ (__printf__, 2, 3)));
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 int win_vdprintf(const int fd, const char* restrict format, va_list args) {
