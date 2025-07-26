@@ -414,6 +414,6 @@ int main(void)
     if (read(STDIN_FILENO, &c, 1) == -1)
         return 1;
     term_send(&tcaps.newline);
-    term_reset();
+    term_deinit();
     return 0;
 }

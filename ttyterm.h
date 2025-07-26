@@ -49,18 +49,19 @@ extern "C" {
 extern termcaps tcaps;
 extern Terminal term;
 
-
-/* Just Init term and tcaps */
+/* Just init term and tcaps */
 void term_init_caps(void);
-/* Just init the input mode */
+/* Just init the input mode. Options: canonical (recieve input line by line) or noncanonical (recieve every input char by char). */
 void term_init_input_mode(enum input_type input_type);
-/* Init everything (set input mode and setup term & tcaps) */
+ /* Init everything (set input mode and setup term & tcaps) */
 void term_init(enum input_type input_type);
 
-/* Just reset the input mode */
-void term_reset_input_mode(void);
-/* Reset everything (reset input mode and free internally used memory) */
-void term_reset(void);
+/* Just deinit term and tcaps (free internally used memory) */
+void term_deinit_caps(void);
+/* Just deinit the input mode (reset to original) */
+void term_deinit_input_mode(void);
+/* Deinit everything (reset input mode and free internally used memory) */
+void term_deinit(void);
 
 /* Output, tracks pos of cursor for you and stores in term */
 int term_putc(const char c);

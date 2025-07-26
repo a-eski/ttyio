@@ -209,12 +209,15 @@ void term_reinit__(void)
     assert(term.size.x && term.size.y);
 }
 
-void term_reset(void)
+void term_deinit_caps(void)
 {
     fflush(stdout);
-
     unibi_destroy(uterm);
-    if (tty_input_mode__ == TTY_NONCANONICAL_MODE) {
+}
+
+void term_deinit_input_mode(void)
+{
+    if (tty_input_mode__ == TTY_CANONICAL_MODE) {
         return;
     }
 
@@ -226,6 +229,12 @@ void term_reset(void)
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
     SetConsoleMode(hStdin, omode__);
 #endif /* if !defined(_WIN32) && !defined(_WIN64) */
+}
+
+void term_deinit(void)
+{
+    term_deinit_caps();
+    term_deinit_input_mode();
 }
 
 void term_y_update__(const int printed)
