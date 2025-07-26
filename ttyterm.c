@@ -45,7 +45,7 @@ static struct termios otios__;
 #   pragma GCC diagnostic push
 #   pragma GCC diagnostic ignored "-Wformat-nonliteral"
 
-int win_vdprintf__(const int fd, const char* restrict fmt, ...) {
+int win_vdprintf__(int fd, const char* restrict fmt, ...) {
     char buffer[4096];
 
     va_list args;
@@ -209,12 +209,15 @@ void term_reinit__(void)
     assert(term.size.x && term.size.y);
 }
 
-void term_reset(void)
+void term_deinit_caps(void)
 {
     fflush(stdout);
-
     unibi_destroy(uterm);
-    if (tty_input_mode__ == TTY_NONCANONICAL_MODE) {
+}
+
+void term_deinit_input_mode(void)
+{
+    if (tty_input_mode__ == TTY_CANONICAL_MODE) {
         return;
     }
 
@@ -226,6 +229,12 @@ void term_reset(void)
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
     SetConsoleMode(hStdin, omode__);
 #endif /* if !defined(_WIN32) && !defined(_WIN64) */
+}
+
+void term_deinit(void)
+{
+    term_deinit_caps();
+    term_deinit_input_mode();
 }
 
 void term_y_update__(const int printed)
@@ -273,7 +282,7 @@ void term_size_update__(const int printed)
     assert(term.pos.x < term.size.x);
 }
 
-int term_putc(const char c)
+int term_putc(char c)
 {
     _MAYBE_UNUSED_ int printed = write(STDOUT_FILENO, &c, 1);
     assert(printed != EOF && printed == 1);
@@ -281,7 +290,7 @@ int term_putc(const char c)
     return 1;
 }
 
-int term_fputc(FILE* restrict file, const char c)
+int term_fputc(FILE* restrict file, char c)
 {
     _MAYBE_UNUSED_ int printed = write(fileno(file), &c, 1);
     assert(printed != EOF && printed == 1);
@@ -289,7 +298,7 @@ int term_fputc(FILE* restrict file, const char c)
     return 1;
 }
 
-int term_dputc(const int fd, const char c)
+int term_dputc(int fd, char c)
 {
     _MAYBE_UNUSED_ int printed = write(fd, &c, 1);
     assert(printed != EOF && printed == 1);
@@ -297,7 +306,7 @@ int term_dputc(const int fd, const char c)
     return 1;
 }
 
-int term_write(const char* restrict buf, const size_t n)
+int term_write(const char* restrict buf, size_t n)
 {
     int printed = write(STDOUT_FILENO, buf, n);
     assert(printed != EOF && (size_t)printed == n);
@@ -305,7 +314,7 @@ int term_write(const char* restrict buf, const size_t n)
     return printed;
 }
 
-int term_writeln(const char* restrict buf, const size_t n)
+int term_writeln(const char* restrict buf, size_t n)
 {
     int printed = write(STDOUT_FILENO, buf, n);
     assert(printed != EOF && (size_t)printed == n);
@@ -314,7 +323,25 @@ int term_writeln(const char* restrict buf, const size_t n)
     return printed;
 }
 
-int term_fwrite(const int fd, const char* restrict buf, const size_t n)
+int term_fwrite(FILE* restrict file, const char* restrict buf, size_t n)
+{
+    int printed = write(fileno(file), buf, n);
+    assert(printed != EOF && (size_t)printed == n);
+    term_size_update__(printed);
+    return printed;
+}
+
+int term_fwriteln(FILE* restrict file, const char* restrict buf, size_t n)
+{
+    int fd = fileno(file);
+    int printed = write(fd, buf, n);
+    assert(printed != EOF && (size_t)printed == n);
+    term_size_update__(printed);
+    term_dsend(fd, &tcaps.newline);
+    return printed;
+}
+
+int term_dwrite(int fd, const char* restrict buf, size_t n)
 {
     int printed = write(fd, buf, n);
     assert(printed != EOF && (size_t)printed == n);
@@ -322,7 +349,7 @@ int term_fwrite(const int fd, const char* restrict buf, const size_t n)
     return printed;
 }
 
-int term_fwriteln(const int fd, const char* restrict buf, const size_t n)
+int term_dwriteln(int fd, const char* restrict buf, size_t n)
 {
     int printed = write(fd, buf, n);
     assert(printed != EOF && (size_t)printed == n);
@@ -400,7 +427,7 @@ int term_fprintln(FILE* restrict file, const char* restrict fmt, ...)
     return printed;
 }
 
-int term_dprint(const int fd, const char* restrict fmt, ...)
+int term_dprint(int fd, const char* restrict fmt, ...)
 {
     int printed;
     va_list args;
@@ -413,7 +440,7 @@ int term_dprint(const int fd, const char* restrict fmt, ...)
     return printed;
 }
 
-int term_dprintln(const int fd, const char* restrict fmt, ...)
+int term_dprintln(int fd, const char* restrict fmt, ...)
 {
     int printed;
     va_list args;
@@ -514,7 +541,7 @@ int term_fsend(cap* restrict c, FILE* restrict file)
     return 0;
 }
 
-int term_dsend(const int fd, cap* restrict c)
+int term_dsend(int fd, cap* restrict c)
 {
     assert(c && c->len);
     if (write(fd, c->val, c->len) == -1)
@@ -526,21 +553,21 @@ int term_dsend(const int fd, cap* restrict c)
     return 0;
 }
 
-void term_send_n(cap* restrict c, const size_t n)
+void term_send_n(cap* restrict c, size_t n)
 {
     for (size_t i = 0; i < n; ++i) {
         term_send(c);
     }
 }
 
-void term_fsend_n(cap* restrict c, const size_t n, FILE* restrict file)
+void term_fsend_n(cap* restrict c, size_t n, FILE* restrict file)
 {
     for (size_t i = 0; i < n; ++i) {
         term_fsend(c, file);
     }
 }
 
-void term_dsend_n(const int fd, cap* restrict c, const size_t n)
+void term_dsend_n(int fd, cap* restrict c, size_t n)
 {
     for (size_t i = 0; i < n; ++i) {
         term_dsend(fd, c);

@@ -91,4 +91,4 @@ scan_build:
 # Clean-up
 .PHONY: clean
 clean :
-	rm $(target) $(objects)
+	rm $(target) $(objects) a.out a.exe a.pdb
