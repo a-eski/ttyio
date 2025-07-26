@@ -14,6 +14,7 @@ Still in very very early stages of development.
 * Tracks cursor position, terminal size, and saved cursor position automatically.
 * Falls back to ASCII control characters when can't load capabilities.
 * Advanced capabilities with multiple fallbacks.
+* Compilable with C99 but uses C23 features when available.
 
 ## Unibilium
 
@@ -29,27 +30,61 @@ Props to Neovim maintainers and [unibilium](https://github.com/neovim/unibilium/
   * Cygwin
   * w64devkit
 * Apple
-  * *only tested compilation, don't have a Mac.*
+  * *only tested compilation*
   * Tested compilation for both x84_64 and aarch64.
 * BSDs
-  * FreeBSD *tested in VM*
+  * *only tested in VM*
+  * FreeBSD
+  * OpenBSD
+  * NetBSD
+
+### Building
+
+Here is a quick guide on building the main example in different environments.
+
+#### Legend
+
+* If inside '[]', then you have to choose one.
+* If inside '{}', then it is optional.
+* Builds default to C23. Can specify a standard like 'STD=-std=c99'.
+* If using the clang64 MSYS2 environment, make sure to pass 'CC=clang'.
+
+#### Overview
+
+* Linux/WSL
+  * make [debug/release] {CC=clang} {STD=-std=c99}
+* Windows
+  * ARM64
+    * *tested with zig cross compilation, targeting aarch64-windows-gnu*
+    * make zig
+  * MSYS2/Cygwin
+    * make debug SAN=0 {CC=clang} {STD=-std=c99}
+    * make release {CC=clang} {STD=-std=c99}
+  * w64devkit
+    * make debug SAN=0 {CC=clang} {STD=-std=c99}
+    * make release LTO=0 {CC=clang} {STD=-std=c99}
+* Apple
+  * *tested with zig cross compilation*
+  * make zig ZIG_TARGET=aarch64_macos
+  * make zig ZIG_TARGET=x86_64-macos
+* BSDs
+  * gmake -f makefile.bsd
 
 ## Todos
 
-* Have configurable for whether to fall back to ASCII control/escape characters or not.
-* Make all output interfaces consistent (i.e. dprint, dwrite, d* is always fd, fprint, f* always takes a file pointer)
-* If int color is greater than tcaps.color_max, it tries to use a reasonably similar color, that is less than current max color (tcaps.color_max).
+* Make fallback to ASCII control characters configurable.
+* If color is greater than tcaps.color_max, try to use a reasonably similar color less than the current max color.
 
 ## Example
 
 Example is in main.c.
-
-It has assertions hardcoded from testing, but you can run on any size terminal.
-
+It has assertions but you can disable them.
 To run on any size terminal to see the example, use:
 
 ``` sh
 make DEFINES=-DNDEBUG
+# or do a release build
+make release
 ```
 
 ## Code Definitions
@@ -69,12 +104,9 @@ Some of these are obvious, but put here just in case they aren't!
 * fg: foreground, referring to color
 * prev: previous
 
-Functions or objects ending in '__' are internal and not meant to be used outside of ttyterm.
-Of course they can be, they are just more likely to change or break your code in future versions if you depend on them.
-
 ## Function definitions
 
-### Overview
+### Function Overview
 
 The functions follow C stdlib conventions generally, but there are some adjustments for improving ergnomics.
 
@@ -82,6 +114,7 @@ The functions mostly follow the same pattern:
 
 * There is usually a version that prints your output (formatted or not), and then a version that adds a newline for you.
 * There is usually a version which defaults to stdout, a version which accepts a file pointer, and a version which accepts a file descriptor.
+* Functions or objects ending in '__' are internal.
 
 For example, there is term_print which defaults to stdout and prints your output formatted.
 Then, term_fprint has similar semantics but prints the formatted output to the specified file pointer (FILE* restrict file).

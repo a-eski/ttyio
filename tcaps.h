@@ -92,19 +92,19 @@ extern "C" {
 #endif // __cplusplus
 
 /* Init all caps */
-void tcaps_init();
+void tcaps_init(void);
 /* Init all caps but can exclude advanced caps like line_goto_prev_eol */
 void tcaps_init_opts(bool init_advanced_caps);
 
 /* Specific caps initialization */
-void tcaps_init_keys();
-void tcaps_init_scr();
-void tcaps_init_cursor();
-void tcaps_init_line();
-void tcaps_init_colors();
+void tcaps_init_keys(void);
+void tcaps_init_scr(void);
+void tcaps_init_cursor(void);
+void tcaps_init_line(void);
+void tcaps_init_colors(void);
 
 /* Advanced cap initiailization */
-void tcaps_init_goto_prev_eol();
+void tcaps_init_goto_prev_eol(void);
 
 #ifdef __cplusplus
 }

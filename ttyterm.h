@@ -28,10 +28,19 @@ typedef struct {
  * Canonical: read line by line, only get the line after user presses enter. a lot of programs work this way.
  * Noncanonical: read character by character. programs who need control over each input need to use this.
  */
-enum input_type: char {
-    TTY_CANONICAL_MODE,
-    TTY_NONCANONICAL_MODE
+#if __STDC_VERSION__ >= 202311L /* C23 */
+enum input_type: unsigned char {
+    TTY_NONE = 0,
+    TTY_CANONICAL_MODE = 1,
+    TTY_NONCANONICAL_MODE = 2
 };
+#else
+enum input_type {
+    TTY_NONE = 0,
+    TTY_CANONICAL_MODE = 1,
+    TTY_NONCANONICAL_MODE = 2
+};
+#endif /* __STDC_VERSION__ >= 202311L */
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,8 +49,18 @@ extern "C" {
 extern termcaps tcaps;
 extern Terminal term;
 
+
+/* Just Init term and tcaps */
+void term_init_caps(void);
+/* Just init the input mode */
+void term_init_input_mode(enum input_type input_type);
+/* Init everything (set input mode and setup term & tcaps) */
 void term_init(enum input_type input_type);
-void term_reset();
+
+/* Just reset the input mode */
+void term_reset_input_mode(void);
+/* Reset everything (reset input mode and free internally used memory) */
+void term_reset(void);
 
 /* Output, tracks pos of cursor for you and stores in term */
 int term_putc(const char c);
@@ -91,7 +110,7 @@ int term_color_bg_set(const int color);
 /* Advanced Output which can have multiple fallbacks.
  * Fallback handling is in ttyterm, tcaps just determines which method to use.
  */
-int term_goto_prev_eol();
+int term_goto_prev_eol(void);
 
 #ifdef __cplusplus
 }

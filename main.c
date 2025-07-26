@@ -8,16 +8,16 @@
 #include "ttyplatform.h"
 
 /* Internal testing method that reinits the term variable, doesn't free memory from unibilium or touch tcaps. */
-void term_reinit__();
+void term_reinit__(void);
 /* Internal method that updates x and y, used here for testing */
 void term_size_update__(int printed);
 /* Internal method that updates y, used here for testing */
 void term_y_update__(int printed);
 
-void term_y_update_tests()
+void term_y_update_tests(void)
 {
     // when printed is 0, y should be incremented by 1
-    [[maybe_unused]] size_t prev_y = term.pos.y;
+    _MAYBE_UNUSED_ size_t prev_y = term.pos.y;
     term_y_update__(0);
     assert(prev_y < term.pos.y);
     assert(term.pos.y == 1);
@@ -58,10 +58,10 @@ void term_y_update_tests()
     assert(term.pos.y == term.size.y - 1);
 }
 
-void term_size_update_tests()
+void term_size_update_tests(void)
 {
     // When nothing is printed, x should not change. 0 only has special meaning for term_y_update__
-    [[maybe_unused]] size_t prev_x = term.pos.x;
+    _MAYBE_UNUSED_ size_t prev_x = term.pos.x;
     term_size_update__(0);
     assert(!term.pos.y);
     assert (prev_x == term.pos.x);
@@ -111,13 +111,13 @@ void multiline(double multiplier)
     for (size_t i = 0; i < n - 1; ++i) {
         multiline[i] = 'a' + i % 26;
     }
-    [[maybe_unused]] int printed = term_print("%s", multiline);
+    _MAYBE_UNUSED_ int printed = term_print("%s", multiline);
     free(multiline);
     // assert(term.pos.y == prev_y + (n / term.size.x));
     // assert(term.pos.x == ((size_t)printed % term.size.x) + 1);
 }
 
-void scr_clear_then_home_test()
+void scr_clear_then_home_test(void)
 {
     term_send(&tcaps.scr_clr);
     term_send(&tcaps.cursor_home);
@@ -125,7 +125,7 @@ void scr_clear_then_home_test()
     assert(!term.pos.x);
 }
 
-void puts_test()
+void puts_test(void)
 {
     term_puts("Cleared screen with unibi");
     assert(term.pos.y == 1);
@@ -140,14 +140,14 @@ void puts_test()
     assert(!term.pos.x);
 }
 
-void print_test()
+void print_test(void)
 {
     term_print("hello from newline");
     assert(term.pos.y == 3);
     assert(term.pos.x = 19);
 }
 
-void bs_and_cursor_left_right_test()
+void bs_and_cursor_left_right_test(void)
 {
     term_send_n(&tcaps.bs, 4);
     assert(term.pos.y == 3);
@@ -170,7 +170,7 @@ void bs_and_cursor_left_right_test()
     assert(term.pos.x = 15);
 }
 
-void cursor_down_test()
+void cursor_down_test(void)
 {
     term_puts("hi");
     assert(term.pos.y == 4);
@@ -185,7 +185,7 @@ void cursor_down_test()
     assert(!term.pos.x);
 }
 
-void cursor_home_test()
+void cursor_home_test(void)
 {
     term_send(&tcaps.cursor_home);
     assert(!term.pos.y);
@@ -196,7 +196,7 @@ void cursor_home_test()
     assert(term.pos.x == 8);
 }
 
-void moving_around_and_rewriting_test()
+void moving_around_and_rewriting_test(void)
 {
     term_send_n(&tcaps.cursor_down, 8);
     assert(term.pos.y == 8);
@@ -223,7 +223,7 @@ void moving_around_and_rewriting_test()
     assert(term.pos.x == 6);
 }
 
-void line_clear_eol_and_bol_test()
+void line_clear_eol_and_bol_test(void)
 {
     term_send(&tcaps.line_clr_to_eol);
     assert(term.pos.y == 10);
@@ -250,7 +250,7 @@ void line_clear_eol_and_bol_test()
     assert(term.pos.x = 6);
 }
 
-void fg_and_bg_color_test()
+void fg_and_bg_color_test(void)
 {
     term_color_set(1);
     term_color_bg_set(10);
@@ -260,7 +260,7 @@ void fg_and_bg_color_test()
     assert(!term.pos.x);
 }
 
-void println_test()
+void println_test(void)
 {
     term_println("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
     assert(term.pos.y == 15);
@@ -271,7 +271,7 @@ void println_test()
     assert(!term.pos.x);
 }
 
-void line_goto_prev_eol_and_eol_test()
+void line_goto_prev_eol_and_eol_test(void)
 {
     term_goto_prev_eol();
     assert(term.pos.y == 15);
@@ -290,7 +290,7 @@ void line_goto_prev_eol_and_eol_test()
     assert(!term.pos.x);
 }
 
-void fmt_expansion_test()
+void fmt_expansion_test(void)
 {
     char test[] = "test expansion working";
     term_print("%s test", test);
@@ -302,7 +302,7 @@ void fmt_expansion_test()
     assert(!term.pos.x);
 }
 
-void multiline_test()
+void multiline_test(void)
 {
     multiline(1.5);
 
@@ -335,7 +335,7 @@ void multiline_test()
     assert(!term.pos.x);
 }
 
-void last_line_test()
+void last_line_test(void)
 {
     term_println("This is the last line!");
     assert(term.pos.y == 45);
@@ -358,7 +358,7 @@ void last_line_test()
     assert(!term.pos.x);
 }
 
-void bg_colors_test()
+void bg_colors_test(void)
 {
     for (int i = 0; i < tcaps.color_max; ++i) {
         term_color_bg_set(i);
@@ -374,7 +374,7 @@ void bg_colors_test()
 /* These tests were done with term.size.x 171, term.size.y 46
  * The tests are currently dependent on ordering.
  */
-int main()
+int main(void)
 {
     term_init(TTY_NONCANONICAL_MODE);
 

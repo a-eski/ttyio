@@ -1,25 +1,31 @@
 STD = -std=c2x
-CC = gcc
+CC ?= gcc
 RELEASE ?= 0
 DEFINES ?=
+# can use to disable santiziers
+SAN ?= 1
+# can use to disable LTO
+LTO ?= 1
 
 main_flags = -Wall -Wextra -Werror -pedantic -pedantic-errors -Wsign-conversion -Wformat=2 -Wshadow -Wvla -fstack-protector-all -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wnested-externs -Winline -Wdisabled-optimization -Wunreachable-code -Wchar-subscripts
 
-# you may have to remove sanitizers for windows based environments
-debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2 -fsanitize=address,undefined,leak -g
-# -fprofile-arcs -ftest-coverage
+debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2 -g
 
-# you may have to remove -flto for windows based environments
-release_flags = $(main_flags) -flto -O3 -ffast-math -march=native -DNDEBUG
-# -flto=6 -s
+release_flags = $(main_flags) -O3 -ffast-math -march=native -DNDEBUG
 
 objects = obj/main.o obj/ttyterm.o obj/terminfo.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
-# objects = obj/ttyterm.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
-# gcc main.c ttyterm.c terminfo.c tcaps.c lib/unibilium.c lib/uninames.c lib/uniutil.c -o ttyterm
 target = u
 
 ifeq ($(CC), gcc)
 	release_flags += -s
+endif
+
+ifeq ($(SAN), 1)
+	debug_flags += -fsanitize=address,undefined,leak
+endif
+
+ifeq ($(LTO), 1)
+	release_flags += -flto
 endif
 
 ifeq ($(RELEASE), 1)
@@ -29,6 +35,7 @@ else
 	CFLAGS ?= $(debug_flags)
 	cc_with_flags = $(CC) $(STD) $(CFLAGS) $(DEFINES)
 endif
+
 
 ifneq ($(OS),Windows_NT)
   	TERMINFO="$(shell ncursesw6-config --terminfo 2>/dev/null || \

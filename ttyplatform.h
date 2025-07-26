@@ -13,17 +13,38 @@
 #endif /* ifdef  defined(__linux__) || defined(__unix__) || defined(__APPLE__) || defined(__MINGW32__) || defined(__MINGW64) || defined(__CYGWIN__) */
 
 
+#if __STDC_VERSION__ >= 202311L /* C23 */
+#   define _MAYBE_UNUSED_ [[maybe_unused]]
+#else
+#   if defined(__GNUC__) || defined(__clang__)
+#       define _MAYBE_UNUSED_ __attribute__((unused))
+#   else
+#       define _MAYBE_UNUSED_
+#   endif /* defined(__GNUC__) || defined(__clang__) */
+#endif /* C23 */
 
-// Definitions needed for cross-compilation from Windows to other platforms. Also needed for Apple and the BSDs.
-#if defined(_WIN32) || defined(_WIN64) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) && (!defined(__MINGW32__) && !defined(__MINGW64__))
 
-#   ifndef unreachable
-#       define unreachable()
-#   endif /* ifndef unreachable */
+
+// Definitions needed for pre-C23 and cross-compilation from Windows to other platforms. Also needed for Apple and the BSDs.
+#if __STDC_VERSION__ < 202311L || defined(_WIN32) || defined(_WIN64) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) && (!defined(__MINGW32__) && !defined(__MINGW64__))
 
 #   include <stdbool.h>
 
-#endif /*  defined(_WIN32) || defined(_WIN64) || defined(__APPLE__) */
+#   if defined(__GNUC__) || defined(__clang__)
+#       ifndef unreachable
+#           define unreachable() __builtin_unreachable()
+#       endif
+#   elif defined(_MSY_VER)
+#       ifndef unreachable
+#           define unreachable() __assume(0)
+#       endif
+#   else
+#       ifndef unreachable
+#           define unreachable() assert(0 && "unreachable");
+#       endif /* ifndef unreachable */
+#   endif
+
+#endif
 
 
 
