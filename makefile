@@ -1,4 +1,5 @@
-STD = -std=c2x
+STD = c2x
+STDFLAG= -std=$(STD)
 CC ?= gcc
 RELEASE ?= 0
 DEFINES ?=
@@ -30,10 +31,10 @@ endif
 
 ifeq ($(RELEASE), 1)
 	CFLAGS ?= $(release_flags)
-	cc_with_flags = $(CC) $(STD) $(CFLAGS) $(DEFINES)
+	cc_with_flags = $(CC) $(STDFLAG) $(CFLAGS) $(DEFINES)
 else
 	CFLAGS ?= $(debug_flags)
-	cc_with_flags = $(CC) $(STD) $(CFLAGS) $(DEFINES)
+	cc_with_flags = $(CC) $(STDFLAG) $(CFLAGS) $(DEFINES)
 endif
 
 

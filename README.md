@@ -46,23 +46,26 @@ Here is a quick guide on building the main example in different environments.
 
 * If inside '[]', then you have to choose one.
 * If inside '{}', then it is optional.
-* Builds default to C23. Can specify a standard like 'STD=-std=c99'.
-* If using the clang64 MSYS2 environment, make sure to pass 'CC=clang'.
+* Builds default to C23. Can specify a standard like 'STD=c99'.
+* *If using the clang64 MSYS2 environment, make sure to pass 'CC=clang'.*
 
 #### Overview
 
 * Linux/WSL
-  * make [debug/release] {CC=clang} {STD=-std=c99}
+  * make [debug/release] {CC=clang} {STD=c99}
 * Windows
   * ARM64
     * *tested with zig cross compilation, targeting aarch64-windows-gnu*
     * make zig
-  * MSYS2/Cygwin
-    * make debug SAN=0 {CC=clang} {STD=-std=c99}
-    * make release {CC=clang} {STD=-std=c99}
+  * MSYS2
+    * make debug SAN=0 {CC=clang} {STD=c99}
+    * make release {CC=clang} {STD=c99}
+  * Cygwin
+    * make debug SAN=0 {CC=clang} {STD=c99}
+    * make release {CC=clang} {STD=c99}
   * w64devkit
-    * make debug SAN=0 {CC=clang} {STD=-std=c99}
-    * make release LTO=0 {CC=clang} {STD=-std=c99}
+    * make debug SAN=0 {CC=clang} {STD=c99}
+    * make release LTO=0 {CC=clang} {STD=c99}
 * Apple
   * *tested with zig cross compilation*
   * make zig ZIG_TARGET=aarch64_macos
