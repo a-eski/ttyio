@@ -42,24 +42,32 @@ static struct termios otios__;
 
 #   include <windows.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-int win_vdprintf(const int fd, const char* restrict format, va_list args) {
+#   pragma GCC diagnostic push
+#   pragma GCC diagnostic ignored "-Wformat-nonliteral"
+
+int win_vdprintf__(const int fd, const char* restrict fmt, ...) {
     char buffer[4096];
-    int len = vsnprintf(buffer, sizeof(buffer), format, args);
+
+    va_list args;
+    va_start(args, fmt);
+    int len = vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+
     if (len < 0)
         return EOF;
 
     // write only the bytes vsnprintf produced
     return write(fd, buffer, (unsigned int)len);
 }
-#pragma GCC diagnostic pop
 
-#   define vdprintf(fd, fmt, args) win_vdprintf(fd, fmt, args)
+#   pragma GCC diagnostic pop
+
+#   define vdprintf(fd, fmt, args) win_vdprintf__(fd, fmt, args)
 
 #   define setenv(name, value, replace) _putenv_s(name, value)
 
 static DWORD omode__;
+
 #endif /* if !defined(_WIN32) && !defined(_WIN64) */
 
 #pragma GCC diagnostic push
