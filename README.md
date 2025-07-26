@@ -14,6 +14,7 @@ Still in very very early stages of development.
 * Tracks cursor position, terminal size, and saved cursor position automatically.
 * Falls back to ASCII control characters when can't load capabilities.
 * Advanced capabilities with multiple fallbacks.
+* Compilable with C99 but uses C23 features when available.
 
 ## Unibilium
 
