@@ -106,6 +106,8 @@ Some of these are obvious, but put here just in case they aren't!
 * bg: background, referring to color
 * fg: foreground, referring to color
 * prev: previous
+* canonical: recieve input line by line
+* noncanonical: recieve input one input at a time
 
 ## Function definitions
 
