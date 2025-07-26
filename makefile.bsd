@@ -4,19 +4,11 @@ DEFINES ?=
 
 main_flags = -Wall -Wextra -Werror -pedantic -pedantic-errors -Wsign-conversion -Wformat=2 -Wshadow -Wvla -fstack-protector-all -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wnested-externs -Winline -Wdisabled-optimization -Wunreachable-code -Wchar-subscripts
 
-debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2 -fsanitize=address,undefined,leak -g
-# -fprofile-arcs -ftest-coverage
-
-test_flags =  $(debug_flags)
+debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2
 
 release_flags = $(main_flags) -flto -O3 -ffast-math -march=native -DNDEBUG
-# -flto=6 -s
-
-fuzz_flags = $(debug_flags) -fsanitize=fuzzer -DNDEBUG
 
 objects = obj/main.o obj/ttyterm.o obj/terminfo.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
-# objects = obj/ttyterm.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
-# gcc main.c ttyterm.c terminfo.c tcaps.c lib/unibilium.c lib/uninames.c lib/uniutil.c -o ttyterm
 target = u
 
 CFLAGS ?= $(release_flags)
@@ -42,3 +34,8 @@ obj/%.o: lib/%.c
 
 obj/%.o: %.c
 	$(cc_with_flags) -c $< -o $@
+
+# Clean-up
+.PHONY: clean
+clean :
+	rm $(target) $(objects)

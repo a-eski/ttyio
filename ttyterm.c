@@ -42,6 +42,9 @@ static struct termios otios__;
 
 #   include <windows.h>
 
+int win_vdprintf(const int fd, const char* restrict format, va_list args)
+    __attribute__ ((__format__ (__printf__, 2, 3)));
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 int win_vdprintf(const int fd, const char* restrict format, va_list args) {
@@ -81,14 +84,13 @@ void fatal__(const char* restrict fmt, ...)
 }
 #pragma GCC diagnostic pop
 
-Coordinates term_size_get__()
+Coordinates term_size_get__(void)
 {
 #if !defined(_WIN32) && !defined(_WIN64)
     struct winsize window;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &window);
     return (Coordinates){.x = window.ws_col, .y = window.ws_row};
 #else
-
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdout == INVALID_HANDLE_VALUE) {
         perror("Error loading stdout handle");
@@ -107,7 +109,7 @@ Coordinates term_size_get__()
 #endif
 }
 
-void term_init(enum input_type input_type)
+void term_init_caps(void)
 {
     term = (Terminal){0};
     term.size = term_size_get__();
@@ -129,7 +131,10 @@ void term_init(enum input_type input_type)
     }
 
     tcaps_init();
+}
 
+void term_init_input_mode(enum input_type input_type)
+{
     tty_input_mode__ = input_type;
     if (input_type == TTY_CANONICAL_MODE) {
         return;
@@ -182,18 +187,24 @@ void term_init(enum input_type input_type)
 #endif
 }
 
+void term_init(enum input_type input_type)
+{
+    term_init_caps();
+    term_init_input_mode(input_type);
+}
+
 /* term_reinit__ *internal*
  * Just reinits the term variable, doesn't free memory from unibilium or touch tcaps.
  * Useful for testing.
  */
-void term_reinit__()
+void term_reinit__(void)
 {
     term = (Terminal){0};
     term.size = term_size_get__();
     assert(term.size.x && term.size.y);
 }
 
-void term_reset()
+void term_reset(void)
 {
     fflush(stdout);
 
@@ -259,7 +270,7 @@ void term_size_update__(const int printed)
 
 int term_putc(const char c)
 {
-    [[maybe_unused]] int printed = write(STDOUT_FILENO, &c, 1);
+    _MAYBE_UNUSED_ int printed = write(STDOUT_FILENO, &c, 1);
     assert(printed != EOF && printed == 1);
     term_size_update__(1);
     return 1;
@@ -267,7 +278,7 @@ int term_putc(const char c)
 
 int term_fputc(FILE* restrict file, const char c)
 {
-    [[maybe_unused]] int printed = write(fileno(file), &c, 1);
+    _MAYBE_UNUSED_ int printed = write(fileno(file), &c, 1);
     assert(printed != EOF && printed == 1);
     term_size_update__(1);
     return 1;
@@ -275,7 +286,7 @@ int term_fputc(FILE* restrict file, const char c)
 
 int term_dputc(const int fd, const char c)
 {
-    [[maybe_unused]] int printed = write(fd, &c, 1);
+    _MAYBE_UNUSED_ int printed = write(fd, &c, 1);
     assert(printed != EOF && printed == 1);
     term_size_update__(1);
     return 1;
@@ -560,7 +571,7 @@ int term_color_bg_set(int color)
     return 0;
 }
 
-int term_goto_prev_eol()
+int term_goto_prev_eol(void)
 {
     if (tcaps.line_goto_prev_eol.fallback == FB_NONE) {
         char buf[TTY_BUF_SIZE] = {0};
