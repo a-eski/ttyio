@@ -104,10 +104,6 @@ Some of these are obvious, but put here just in case they aren't!
 * fg: foreground, referring to color
 * prev: previous
 
-### Notes
-
-* Functions or objects ending in '__' are internal.
-
 ## Function definitions
 
 ### Function Overview
@@ -118,6 +114,7 @@ The functions mostly follow the same pattern:
 
 * There is usually a version that prints your output (formatted or not), and then a version that adds a newline for you.
 * There is usually a version which defaults to stdout, a version which accepts a file pointer, and a version which accepts a file descriptor.
+* Functions or objects ending in '__' are internal.
 
 For example, there is term_print which defaults to stdout and prints your output formatted.
 Then, term_fprint has similar semantics but prints the formatted output to the specified file pointer (FILE* restrict file).
