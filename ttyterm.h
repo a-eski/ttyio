@@ -51,7 +51,7 @@ extern Terminal term;
 
 /* Just init term and tcaps */
 void term_init_caps(void);
-/* Just init the input mode. Options: canonical (recieve input line by line) or noncanonical (recieve every input char by char). */
+/* Just init the input mode (canonical or noncanonical). */
 void term_init_input_mode(enum input_type input_type);
  /* Init everything (set input mode and setup term & tcaps) */
 void term_init(enum input_type input_type);
@@ -64,15 +64,16 @@ void term_deinit_input_mode(void);
 void term_deinit(void);
 
 /* Output, tracks pos of cursor for you and stores in term */
-int term_putc(const char c);
-int term_fputc(FILE* restrict file, const char c);
-int term_dputc(int fd, const char c);
+int term_putc(char c);
+int term_fputc(FILE* restrict file, char c);
+int term_dputc(int fd, char c);
 
-int term_write(const char* restrict buf, const size_t n);
-int term_writeln(const char* restrict buf, const size_t n);
-int term_fwrite(const int fd, const char* restrict buf, const size_t n);
-int term_fwriteln(const int fd, const char* restrict buf, const size_t n);
-// TODO: term_dwrite, term_dwriteln?
+int term_write(const char* restrict buf, size_t n);
+int term_writeln(const char* restrict buf, size_t n);
+int term_fwrite(FILE* restrict file, const char* restrict buf, size_t n);
+int term_fwriteln(FILE* restrict file, const char* restrict buf, size_t n);
+int term_dwrite(int fd, const char* restrict buf, size_t n);
+int term_dwriteln(int fd, const char* restrict buf, size_t n);
 
 int term_puts(const char* restrict str);
 int term_fputs(const char* restrict str, FILE* restrict file);
@@ -85,27 +86,25 @@ int term_fprint(FILE* restrict file, const char* restrict fmt, ...)
     __attribute__ ((__format__ (__printf__, 2, 3)));
 int term_fprintln(FILE* restrict file, const char* restrict fmt, ...)
     __attribute__ ((__format__ (__printf__, 2, 3)));
-int term_dprint(const int fd, const char* restrict fmt, ...)
+int term_dprint(int fd, const char* restrict fmt, ...)
     __attribute__ ((__format__ (__printf__, 2, 3)));
-int term_dprintln(const int fd, const char* restrict fmt, ...)
+int term_dprintln(int fd, const char* restrict fmt, ...)
     __attribute__ ((__format__ (__printf__, 2, 3)));
 
 int term_perror(const char* restrict msg);
 
-/* Output using tcaps, fallsback to ASCII control characters if cap not found */
+/* Output using tcaps, fallsback to ASCII control characters if cap not found. */
 int term_send(cap* restrict c);
-int term_dsend(const int fd, cap* restrict c);
+int term_dsend(int fd, cap* restrict c);
 int term_fsend(cap* restrict c, FILE* restrict file);
-void term_send_n(cap* restrict c, const size_t n);
-void term_dsend_n(const int fd, cap* restrict c, const size_t n);
-void term_fsend_n(cap* restrict c, const size_t n, FILE* restrict file);
+void term_send_n(cap* restrict c, size_t n);
+void term_dsend_n(int fd, cap* restrict c, size_t n);
+void term_fsend_n(cap* restrict c, size_t n, FILE* restrict file);
 
 /* Colors */
-/* Colors don't have a fallback. If tcaps.color_max is 0, no color is set.
-* TODO: If int color is greater than tcaps.color_max, it tries to use a reasonably similar color,
- * that is less than tcaps.color_max. */
-int term_color_set(const int color);
-int term_color_bg_set(const int color);
+/* Colors don't have a fallback. If tcaps.color_max is 0, no color is set. */
+int term_color_set(int color);
+int term_color_bg_set(int color);
 #define term_color_reset() term_send(&tcaps.color_reset)
 
 /* Advanced Output which can have multiple fallbacks.

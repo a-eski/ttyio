@@ -12,13 +12,10 @@ Still in very very early stages of development.
 * Easy access to terminal capabilities.
 * Simple output interfaces.
 * Tracks cursor position, terminal size, and saved cursor position automatically.
+* Initialize terminal for canonical or noncanonical input.
 * Falls back to ASCII control characters when can't load capabilities.
 * Advanced capabilities with multiple fallbacks.
 * Compilable with C99 but uses C23 features when available.
-
-## Unibilium
-
-Props to Neovim maintainers and [unibilium](https://github.com/neovim/unibilium/tree/master).
 
 ## Supported Platforms
 
@@ -73,11 +70,6 @@ Here is a quick guide on building the main example in different environments.
 * BSDs
   * gmake -f makefile.bsd
 
-## Todos
-
-* Make fallback to ASCII control characters configurable.
-* If color is greater than tcaps.color_max, try to use a reasonably similar color less than the current max color.
-
 ## Example
 
 Example is in main.c.
@@ -109,9 +101,11 @@ Some of these are obvious, but put here just in case they aren't!
 * canonical: recieve input line by line
 * noncanonical: recieve input one input at a time
 
-## Function definitions
+## API
 
-### Function Overview
+ttyterm provides a set of functions to interact with the terminal and terminal capabilities.
+
+### Understanding the APIs
 
 The functions follow C stdlib conventions generally, but there are some adjustments for improving ergnomics.
 
@@ -126,7 +120,15 @@ Then, term_fprint has similar semantics but prints the formatted output to the s
 Lastly, there is term_dprint which has similar semantics but prints the formatted output to the specified file descriptor (int fd).
 All have a version which handles newline for you as well, term_println, term_fprintln, and term_dprintln.
 
-### Functions
+### Input modes
+
+ttyterm provides 2 input modes. It itializes the terminal with these input modes when necessary.
+The input modes are optional.
+
+ * Canonical: read line by line, only get the line after user presses enter. a lot of programs work this way.
+ * Noncanonical: read character by character. programs who need control over each input need to use this.
+
+### Output Functions
 
 * term_putc: similar to putchar
 * term_fputc: similar to term_putc, but accepts a file pointer
@@ -155,3 +157,12 @@ All have a version which handles newline for you as well, term_println, term_fpr
 * term_send_n: call term_send n times
 * term_dsend_n: call term_dsend n times
 * term_fsend_n: call term_fsend n times
+
+## Unibilium
+
+Props to Neovim maintainers and [unibilium](https://github.com/neovim/unibilium/tree/master).
+
+## Todos
+
+* Make fallback to ASCII control characters configurable.
+* If color is greater than tcaps.color_max, try to use a reasonably similar color less than the current max color.
