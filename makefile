@@ -14,7 +14,7 @@ debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2 -g
 
 release_flags = $(main_flags) -O3 -ffast-math -march=native -DNDEBUG
 
-objects = obj/main.o obj/ttyterm.o obj/terminfo.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
+objects = obj/main.o obj/ttyio.o obj/terminfo.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
 target = u
 
 ifeq ($(CC), gcc)
@@ -53,13 +53,13 @@ else
   	TERMINFO_DIRS=""
   	TERMINFO=""
 endif
-TTYTERM_DEFINES ?= -DTERMINFO='$(TERMINFO)' -DTERMINFO_DIRS='$(TERMINFO_DIRS)'
+TTYIO_DEFINES ?= -DTERMINFO='$(TERMINFO)' -DTERMINFO_DIRS='$(TERMINFO_DIRS)'
 
 $(target) : $(objects)
 	$(cc_with_flags) -o $(target) $(objects)
 
 obj/%.o: lib/%.c
-	$(cc_with_flags) $(TTYTERM_DEFINES) -c $< -o $@
+	$(cc_with_flags) $(TTYIO_DEFINES) -c $< -o $@
 
 obj/%.o: %.c
 	$(cc_with_flags) -c $< -o $@
@@ -75,7 +75,7 @@ debug :
 # Cross compilation
 ZIG_TARGET ?= aarch64-windows-gnu
 zig:
-	zig cc -target $(ZIG_TARGET) $(TTYTERM_DEFINES) main.c ttyterm.c terminfo.c tcaps.c lib/unibilium.c lib/uninames.c lib/uniutil.c
+	zig cc -target $(ZIG_TARGET) $(TTYIO_DEFINES) main.c ttyio.c terminfo.c tcaps.c lib/unibilium.c lib/uninames.c lib/uniutil.c
 
 # Format the project
 clang_format :
