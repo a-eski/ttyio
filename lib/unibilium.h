@@ -538,6 +538,11 @@ enum unibi_string {
 
 typedef struct unibi_term unibi_term;
 
+typedef struct {
+    int i_;
+    char* p_;
+} unibi_var_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -605,11 +610,6 @@ size_t unibi_add_ext_str(unibi_term*, const char*, const char*);
 void unibi_del_ext_bool(unibi_term*, size_t);
 void unibi_del_ext_num(unibi_term*, size_t);
 void unibi_del_ext_str(unibi_term*, size_t);
-
-typedef struct {
-    int i_;
-    char* p_;
-} unibi_var_t;
 
 unibi_var_t unibi_var_from_num(int);
 unibi_var_t unibi_var_from_str(char*);
