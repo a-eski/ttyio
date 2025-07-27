@@ -569,7 +569,7 @@ unibi_term* unibi_from_file(const char*);
 unibi_term* unibi_from_term(const char*);
 unibi_term* unibi_from_env(void);
 
-extern const char unibi_terminfo_dirs[];
+extern const char* const unibi_terminfo_dirs;
 
 const char* unibi_name_bool(enum unibi_boolean);
 const char* unibi_short_name_bool(enum unibi_boolean);
