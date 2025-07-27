@@ -9,7 +9,11 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "ttyplatform.h" // used for including stdbool in case of Apple
+#include "ttyplatform.h" // used for including stdbool in cases its needed
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
 
 enum caps {
     CAP_BS,
@@ -86,10 +90,6 @@ typedef struct {
     cap color_bg_set;
 
 } termcaps;
-
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
 
 /* Init all caps */
 void tcaps_init(void);

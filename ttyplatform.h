@@ -33,11 +33,11 @@
 #   if defined(__GNUC__) || defined(__clang__)
 #       ifndef unreachable
 #           define unreachable() __builtin_unreachable()
-#       endif
+#       endif /* ifndef unreachable */
 #   elif defined(_MSY_VER)
 #       ifndef unreachable
 #           define unreachable() __assume(0)
-#       endif
+#       endif /* ifndef unreachable */
 #   else
 #       ifndef unreachable
 #           define unreachable() assert(0 && "unreachable");
