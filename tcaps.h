@@ -1,4 +1,4 @@
-/* Copyright ttyterm (C) by Alex Eski 2025 */
+/* Copyright ttyio (C) by Alex Eski 2025 */
 /* Licensed under GPLv3, see LICENSE for more information. */
 
 #pragma once
@@ -50,7 +50,7 @@ typedef struct {
     const char* val;
 } cap;
 
-// Advanced caps can use multiple fallbacks that must be handled by functions in ttyterm.
+// Advanced caps can use multiple fallbacks that must be handled by functions in ttyio.
 typedef struct {
     enum { FB_NONE, FB_FIRST, FB_SECOND } fallback;
     enum advanced_caps__ type;

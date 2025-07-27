@@ -1,6 +1,6 @@
-/* Copyright ttyterm (C) by Alex Eski 2025 */
+/* Copyright ttyio (C) by Alex Eski 2025 */
 /* Licensed under GPLv3, see LICENSE for more information. */
-/* ttyterm.h: public interface for the ttyterm library */
+/* ttyio.h: public interface for the ttyio library */
 
 #ifndef TERM_GUARD_H_
 #define TERM_GUARD_H_
@@ -40,7 +40,7 @@ enum input_type {
     TTY_CANONICAL_MODE = 1,
     TTY_NONCANONICAL_MODE = 2
 };
-#endif /* __STDC_VERSION__ >= 202311L */
+#endif /* C23 */
 
 #ifdef __cplusplus
 extern "C" {
@@ -108,7 +108,7 @@ int term_color_bg_set(int color);
 #define term_color_reset() term_send(&tcaps.color_reset)
 
 /* Advanced Output which can have multiple fallbacks.
- * Fallback handling is in ttyterm, tcaps just determines which method to use.
+ * Fallback handling is in ttyio, tcaps just determines which method to use.
  */
 int term_goto_prev_eol(void);
 

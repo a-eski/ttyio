@@ -1,4 +1,4 @@
-# ttyterm
+# ttyio
 
 A lightweight wrapper library for unibilium.
 
@@ -84,9 +84,7 @@ make release
 
 ## Code Definitions
 
-The API for ttyterm contains some abbreviations which are fairly common.
-
-Some of these are obvious, but put here just in case they aren't!
+ttyio contains some shorthands/abbreviations in code and in the API:
 
 * scr: screen
 * clr: clear
@@ -103,7 +101,7 @@ Some of these are obvious, but put here just in case they aren't!
 
 ## API
 
-ttyterm provides a set of functions to interact with the terminal and terminal capabilities.
+ttyio provides a set of functions to interact with the terminal and terminal capabilities.
 
 ### Understanding the APIs
 
@@ -122,7 +120,7 @@ All have a version which handles newline for you as well, term_println, term_fpr
 
 ### Input modes
 
-ttyterm provides 2 input modes. It itializes the terminal with these input modes when necessary.
+ttyio provides 2 input modes. It itializes the terminal with these input modes when necessary.
 The input modes are optional.
 
  * Canonical: read line by line, only get the line after user presses enter. a lot of programs work this way.

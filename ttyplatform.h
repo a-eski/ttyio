@@ -1,6 +1,6 @@
-/* Copyright ttyterm (C) by Alex Eski 2025 */
+/* Copyright ttyio (C) by Alex Eski 2025 */
 /* Licensed under GPLv3, see LICENSE for more information. */
-/* ttyplatform.h: platform layer for the ttyterm library */
+/* ttyplatform.h: platform layer for the ttyio library */
 
 #ifndef TTYPLATFORM_GUARD_H_
 #define TTYPLATFORM_GUARD_H_

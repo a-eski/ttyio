@@ -1,6 +1,6 @@
-/* Copyright ttyterm (C) by Alex Eski 2025 */
+/* Copyright ttyio (C) by Alex Eski 2025 */
 /* Licensed under GPLv3, see LICENSE for more information. */
-/* ttyterm.h: public interface implementation for the ttyterm library */
+/* ttyio.h: implementation of public interfaces of the ttyio library */
 
 #ifndef _POXIC_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
@@ -15,12 +15,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "terminfo.h"
-#include "ttyterm.h"
-
 #include "lib/unibilium.h"
+#include "terminfo.h"
 #include "tcaps.h"
-#include "ttyterm.h"
+#include "ttyio.h"
 #include "ttyplatform.h" // used for macros
 
 unibi_term* uterm;
