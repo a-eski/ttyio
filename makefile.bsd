@@ -1,3 +1,4 @@
+# for use with GNU make (gmake)
 STD = c2x
 STDFLAG = -std=$(STD)
 CC = gcc
@@ -13,7 +14,7 @@ objects = obj/main.o obj/ttyio.o obj/terminfo.o obj/tcaps.o obj/unibilium.o obj/
 target = u
 
 CFLAGS ?= $(release_flags)
-cc_with_flags = $(CC) $(STD) $(CFLAGS) $(DEFINES)
+cc_with_flags = $(CC) $(STDFLAG) $(CFLAGS) $(DEFINES)
 
 TERMINFO="$(shell ncursesw6-config --terminfo 2>/dev/null || \
                          ncurses6-config  --terminfo 2>/dev/null || \
