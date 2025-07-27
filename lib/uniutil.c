@@ -41,12 +41,10 @@ enum {
 
 #if __STDC_VERSION__ >= 202311L /* C23 */
 
-#   if defined(__MINGW32__) || defined(__MINGW64__)
+#   if defined(__MINGW32__) || defined(__MINGW64__) || defined(__clang__)
 constexpr const char unibi_terminfo_dirs[] = TERMINFO_DIRS;
 #   elif defined(__GNUC__)
 constexpr char unibi_terminfo_dirs[] = TERMINFO_DIRS;
-#   elif defined(__clang__)
-constexpr const char unibi_terminfo_dirs[] = TERMINFO_DIRS;
 #   endif
 
 #else
