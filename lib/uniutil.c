@@ -45,7 +45,7 @@ enum {
 constexpr const char unibi_terminfo_dirs[] = TERMINFO_DIRS;
 #   elif defined(__GNUC__)
 constexpr char unibi_terminfo_dirs[] = TERMINFO_DIRS;
-#else
+#   else
 constexpr const char unibi_terminfo_dirs[] = TERMINFO_DIRS;
 #   endif
 
