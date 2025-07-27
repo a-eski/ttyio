@@ -13,6 +13,10 @@
 
 #define TTYIO_RED_ERROR 196
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 typedef struct {
     size_t x;
     size_t y;
@@ -41,10 +45,6 @@ enum input_type {
     TTY_NONCANONICAL_MODE = 2
 };
 #endif /* C23 */
-
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
 
 extern termcaps tcaps;
 extern Terminal term;

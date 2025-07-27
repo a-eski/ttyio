@@ -24,6 +24,10 @@ along with unibilium.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 enum unibi_boolean {
     unibi_boolean_begin_,
     unibi_auto_left_margin,
@@ -538,15 +542,6 @@ enum unibi_string {
 
 typedef struct unibi_term unibi_term;
 
-typedef struct {
-    int i_;
-    char* p_;
-} unibi_var_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
-
 unibi_term* unibi_dummy(void);
 unibi_term* unibi_from_mem(const char*, size_t);
 void unibi_destroy(unibi_term*);
@@ -574,7 +569,7 @@ unibi_term* unibi_from_file(const char*);
 unibi_term* unibi_from_term(const char*);
 unibi_term* unibi_from_env(void);
 
-extern const char* const unibi_terminfo_dirs;
+extern const char unibi_terminfo_dirs[];
 
 const char* unibi_name_bool(enum unibi_boolean);
 const char* unibi_short_name_bool(enum unibi_boolean);
@@ -610,6 +605,11 @@ size_t unibi_add_ext_str(unibi_term*, const char*, const char*);
 void unibi_del_ext_bool(unibi_term*, size_t);
 void unibi_del_ext_num(unibi_term*, size_t);
 void unibi_del_ext_str(unibi_term*, size_t);
+
+typedef struct {
+    int i_;
+    char* p_;
+} unibi_var_t;
 
 unibi_var_t unibi_var_from_num(int);
 unibi_var_t unibi_var_from_str(char*);
