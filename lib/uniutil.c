@@ -40,17 +40,19 @@ enum {
 };
 
 #if __STDC_VERSION__ >= 202311L /* C23 */
-#   if defined(__GNUC__)
+
+#   if defined(__MINGW32__) || defined(__MINGW64__)
+constexpr const char unibi_terminfo_dirs[] = TERMINFO_DIRS;
+#   elif defined(__GNUC__)
 constexpr char unibi_terminfo_dirs[] = TERMINFO_DIRS;
 #   elif defined(__clang__)
 constexpr const char unibi_terminfo_dirs[] = TERMINFO_DIRS;
 #   endif
+
 #else
-#   if defined(__GNUC__)
+
 const char unibi_terminfo_dirs[] = TERMINFO_DIRS;
-#   elif defined(__clang__)
-const char unibi_terminfo_dirs[] = TERMINFO_DIRS;
-#   endif
+
 #endif /* C23 */
 
 unibi_term* unibi_from_fp(FILE* fp)
