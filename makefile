@@ -8,9 +8,9 @@ SAN ?= 1
 # can use to disable LTO
 LTO ?= 1
 
-main_flags = -Wall -Wextra -Werror -pedantic -pedantic-errors -Wsign-conversion -Wformat=2 -Wshadow -Wvla -fstack-protector-all -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wnested-externs -Winline -Wdisabled-optimization -Wunreachable-code -Wchar-subscripts
+main_flags = -Wall -Wextra -Werror -pedantic -pedantic-errors -Wsign-conversion -Wformat=2 -Wshadow -Wvla -fstack-protector-strong -fPIC -fPIE -pie -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wnested-externs -Winline -Wdisabled-optimization -Wunreachable-code -Wchar-subscripts
 
-debug_flags = $(main_flags) -D_FORTIFY_SOURCE=2 -g
+debug_flags = $(main_flags) -D_FORTIFY_SOURCE=3 -g
 
 release_flags = $(main_flags) -O3 -ffast-math -march=native -DNDEBUG
 
