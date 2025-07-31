@@ -34,6 +34,9 @@ $(target) : $(objects)
 obj/%.o: lib/%.c
 	$(cc_with_flags) $(TTYIO_DEFINES) -c $< -o $@
 
+obj/%.o: test/%.c
+	$(cc_with_flags) $(TTYIO_DEFINES) -c $< -o $@
+
 obj/%.o: %.c
 	$(cc_with_flags) -c $< -o $@
 
