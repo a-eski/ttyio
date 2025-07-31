@@ -82,6 +82,11 @@ make DEFINES=-DNDEBUG
 make release
 ```
 
+## Compile-time Options
+
+You can define 'TTY_USE_NEWLINE_FB' so that ttyio always use "\n" instead of what is defined in the terminfo database.
+May be useful to shells or applications writing to output to files.
+
 ## Code Definitions
 
 ttyio contains some shorthands/abbreviations in code and in the API:
@@ -120,7 +125,7 @@ All have a version which handles newline for you as well, tty_println, tty_fprin
 
 ### Input modes
 
-ttyio provides 2 input modes. It itializes the terminal with these input modes when necessary.
+ttyio provides 2 input modes. It initializes the terminal with these input modes when necessary.
 The input modes are optional.
 
  * Canonical: read line by line, only get the line after user presses enter. a lot of programs work this way.

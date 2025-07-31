@@ -19,6 +19,8 @@ enum caps {
     CAP_BS,
     CAP_DEL,
     CAP_NEWLINE,
+    CAP_PAGE_UP,
+    CAP_PAGE_DOWN,
 
     CAP_SCR_CLR,
     CAP_SCR_CLR_TO_EOS,
@@ -64,6 +66,8 @@ typedef struct {
     cap bs; /* Keys */
     cap del;
     cap newline;
+    cap page_up;
+    cap page_down;
 
     cap scr_clr; /* Screen */
     cap scr_clr_to_eos;
