@@ -7,7 +7,6 @@
 #define TCAPS_GUARD_H_
 
 #include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 
 #include "ttyplatform.h" // used for including stdbool in cases its needed
@@ -16,16 +15,12 @@
 extern "C" {
 #endif // __cplusplus
 
-#if __STDC_VERSION__ >= 202311L /* C23 */
-enum caps: uint_fast8_t {
-#else
 enum caps {
-#endif /* C23 */
-    CAP_BS = 0,
+    CAP_BS,
     CAP_DEL,
     CAP_NEWLINE,
-    CAPS_PAGE_UP,
-    CAPS_PAGE_DOWN,
+    CAP_PAGE_UP,
+    CAP_PAGE_DOWN,
 
     CAP_SCR_CLR,
     CAP_SCR_CLR_TO_EOS,
@@ -48,18 +43,11 @@ enum caps {
     CAP_COLOR_RESET,
     CAP_COLOR_SET,
     CAP_COLOR_BG_SET,
-
     CAPS_END
 };
 
-#if __STDC_VERSION__ >= 202311L /* C23 */
-enum advanced_caps__: uint_fast8_t {
-#else
 enum advanced_caps__ {
-#endif /* C23 */
-    CAP_ADVANCED_CAP_START = CAPS_END,
-
-    CAP_LINE_GOTO_PREV_EOL
+    CAP_LINE_GOTO_PREV_EOL = CAPS_END
 };
 
 typedef struct {
@@ -105,7 +93,7 @@ typedef struct {
     cap color_set;
     cap color_bg_set;
 
-} ttycaps;
+} termcaps;
 
 /* Init all caps */
 void tcaps_init(void);

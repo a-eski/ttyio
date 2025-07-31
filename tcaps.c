@@ -7,7 +7,7 @@
 #include "tcaps.h"
 #include "ttyplatform.h" // used for including stdbool in cases its needed
 
-extern ttycaps tcaps;
+extern termcaps tcaps;
 extern unibi_term* uterm;
 
 // Fallback macros
@@ -74,7 +74,7 @@ void tcaps_init(void)
 
 void tcaps_init_opts(bool init_advanced_caps)
 {
-    tcaps = (ttycaps){0};
+    tcaps = (termcaps){0};
     tcaps_init_keys();
     tcaps_init_scr();
     tcaps_init_cursor();
@@ -105,10 +105,10 @@ void tcaps_init_keys(void)
 #endif /* ifdef TTY_USE_NEWLINE_FB */
 
     const char* page_up = unibi_get_str(uterm, unibi_key_ppage);
-    tcaps_set(page_up, tcaps.page_up, FB_PAGE_UP, CAPS_PAGE_UP);
+    tcaps_set(page_up, tcaps.page_up, FB_PAGE_UP, CAP_PAGE_UP);
 
     const char* page_down = unibi_get_str(uterm, unibi_key_npage);
-    tcaps_set(page_down, tcaps.page_down, FB_PAGE_DOWN, CAPS_PAGE_DOWN);
+    tcaps_set(page_down, tcaps.page_down, FB_PAGE_DOWN, CAP_PAGE_DOWN);
 }
 
 void tcaps_init_scr(void)

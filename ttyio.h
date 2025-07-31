@@ -20,13 +20,13 @@ extern "C" {
 typedef struct {
     size_t x;
     size_t y;
-} ttycoords;
+} Coordinates;
 
 typedef struct {
-    ttycoords pos;
-    ttycoords size;
-    ttycoords saved_pos;
-} ttyterm;
+    Coordinates pos;
+    Coordinates size;
+    Coordinates saved_pos;
+} Terminal;
 
 /* enum input_type
  * Canonical: read line by line, only get the line after user presses enter. a lot of programs work this way.
@@ -34,23 +34,27 @@ typedef struct {
  */
 #if __STDC_VERSION__ >= 202311L /* C23 */
 enum input_type: unsigned char {
-#else
-enum input_type {
-#endif /* C23 */
     TTY_NONE = 0,
     TTY_CANONICAL_MODE = 1,
     TTY_NONCANONICAL_MODE = 2
 };
+#else
+enum input_type {
+    TTY_NONE = 0,
+    TTY_CANONICAL_MODE = 1,
+    TTY_NONCANONICAL_MODE = 2
+};
+#endif /* C23 */
 
-extern ttycaps tcaps;
-extern ttyterm tterm;
+extern termcaps tcaps;
+extern Terminal term;
 
 /* Just init term and tcaps */
 void tty_init_caps(void);
 /* Just init the input mode (canonical or noncanonical). */
 void tty_init_input_mode(enum input_type input_type);
  /* Init everything (set input mode and setup term & tcaps) */
-void tty_init(void);
+void tty_init(enum input_type input_type);
 
 /* Just deinit term and tcaps (free internally used memory) */
 void tty_deinit_caps(void);

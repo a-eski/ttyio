@@ -85,7 +85,7 @@ make release
 ## Compile-time Options
 
 You can define 'TTY_USE_NEWLINE_FB' so that ttyio always use "\n" instead of what is defined in the terminfo database.
-May be useful to shells or application writing to output to files.
+May be useful to shells or applications writing to output to files.
 
 ## Code Definitions
 
