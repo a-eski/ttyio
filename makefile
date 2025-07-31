@@ -55,7 +55,7 @@ else
 endif
 TTYIO_DEFINES ?= -DTERMINFO='$(TERMINFO)' -DTERMINFO_DIRS='$(TERMINFO_DIRS)'
 
-$(target) : $(objects)
+$(target): $(objects)
 	$(cc_with_flags) -o $(target) $(objects)
 
 obj/%.o: lib/%.c
@@ -72,7 +72,7 @@ release:
 	make RELEASE=1
 
 # Debug build
-debug :
+debug:
 	make -B RELEASE=0
 
 # Cross compilation
@@ -81,9 +81,9 @@ zig:
 	zig cc -target $(ZIG_TARGET) $(TTYIO_DEFINES) test/main.c ttyio.c terminfo.c tcaps.c lib/unibilium.c lib/uninames.c lib/uniutil.c
 
 # Format the project
-clang_format :
+clang_format:
 	find . -regex '.*\.\(c\|h\)' -exec clang-format -style=file -i {} \;
-cf :
+cf:
 	make clang_format
 
 # Perform static analysis on the project
@@ -93,5 +93,5 @@ scan_build:
 
 # Clean-up
 .PHONY: clean
-clean :
+clean:
 	rm $(target) $(objects) a.out a.exe a.pdb

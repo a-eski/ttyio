@@ -32,7 +32,8 @@ typedef struct {
  * Canonical: read line by line, only get the line after user presses enter. a lot of programs work this way.
  * Noncanonical: read character by character. programs who need control over each input need to use this.
  */
-#if __STDC_VERSION__ >= 202311L /* C23 */
+#if defined(__cplusplus) || __STDC_VERSION__ >= 202311L
+// #if __STDC_VERSION__ >= 202311L /* C23 */
 enum input_type: unsigned char {
     TTY_NONE = 0,
     TTY_CANONICAL_MODE = 1,
