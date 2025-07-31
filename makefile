@@ -61,6 +61,9 @@ $(target) : $(objects)
 obj/%.o: lib/%.c
 	$(cc_with_flags) $(TTYIO_DEFINES) -c $< -o $@
 
+obj/%.o: test/%.c
+	$(cc_with_flags) $(TTYIO_DEFINES) -c $< -o $@
+
 obj/%.o: %.c
 	$(cc_with_flags) -c $< -o $@
 
@@ -75,7 +78,7 @@ debug :
 # Cross compilation
 ZIG_TARGET ?= aarch64-windows-gnu
 zig:
-	zig cc -target $(ZIG_TARGET) $(TTYIO_DEFINES) main.c ttyio.c terminfo.c tcaps.c lib/unibilium.c lib/uninames.c lib/uniutil.c
+	zig cc -target $(ZIG_TARGET) $(TTYIO_DEFINES) test/main.c ttyio.c terminfo.c tcaps.c lib/unibilium.c lib/uninames.c lib/uniutil.c
 
 # Format the project
 clang_format :

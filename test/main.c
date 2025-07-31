@@ -4,8 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "ttyio.h"
-#include "ttyplatform.h"
+#include "../ttyio.h"
+#include "../ttyplatform.h"
 
 /* Internal testing method that reinits the term variable, doesn't free memory from unibilium or touch tcaps. */
 void tty_reinit__(void);
