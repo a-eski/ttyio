@@ -14,8 +14,6 @@ extern unibi_term* uterm;
 #define FB_BS "\b \b" /* Keys */
 #define FB_DEL " \b"
 #define FB_NEWLINE "\n"
-#define FB_PAGE_UP "\033[5~"
-#define FB_PAGE_DOWN "\033[6~"
 
 #define FB_CLR_SCR "\033[2J" /* Screen */
 #define FB_CLR_SCR_TO_EOS "\033[J"
@@ -97,12 +95,6 @@ void tcaps_init_keys(void)
 
     const char* newline = unibi_get_str(uterm, unibi_newline);
     tcaps_set(newline, tcaps.newline, FB_NEWLINE, CAP_NEWLINE);
-
-    const char* page_up = unibi_get_str(uterm, unibi_key_ppage);
-    tcaps_set(page_up, tcaps.page_up, FB_PAGE_UP, CAPS_PAGE_UP);
-
-    const char* page_down = unibi_get_str(uterm, unibi_key_npage);
-    tcaps_set(page_down, tcaps.page_down, FB_PAGE_DOWN, CAPS_PAGE_DOWN);
 }
 
 void tcaps_init_scr(void)
