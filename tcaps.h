@@ -105,7 +105,7 @@ typedef struct {
     cap color_set;
     cap color_bg_set;
 
-} ttycaps;
+} termcaps;
 
 /* Init all caps */
 void tcaps_init(void);

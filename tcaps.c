@@ -7,7 +7,7 @@
 #include "tcaps.h"
 #include "ttyplatform.h" // used for including stdbool in cases its needed
 
-extern ttycaps tcaps;
+extern termcaps tcaps;
 extern unibi_term* uterm;
 
 // Fallback macros
@@ -74,7 +74,7 @@ void tcaps_init(void)
 
 void tcaps_init_opts(bool init_advanced_caps)
 {
-    tcaps = (ttycaps){0};
+    tcaps = (termcaps){0};
     tcaps_init_keys();
     tcaps_init_scr();
     tcaps_init_cursor();
@@ -95,14 +95,8 @@ void tcaps_init_keys(void)
     const char* del = unibi_get_str(uterm, unibi_key_dc);
     tcaps_set(del, tcaps.del, FB_DEL, CAP_DEL);
 
-// NOTE: Most applications can use the newline from terminfo db, but if you have a shell or an application
-// writing output to files, you may just want to use "\n" instead of terminfo db newline to simplify things.
-#ifdef TTY_USE_NEWLINE_FB
-    tcaps.newline = cap_New_Lit(FB_NEWLINE, CAP_NEWLINE);
-#else
     const char* newline = unibi_get_str(uterm, unibi_newline);
     tcaps_set(newline, tcaps.newline, FB_NEWLINE, CAP_NEWLINE);
-#endif /* ifdef TTY_USE_NEWLINE_FB */
 
     const char* page_up = unibi_get_str(uterm, unibi_key_ppage);
     tcaps_set(page_up, tcaps.page_up, FB_PAGE_UP, CAPS_PAGE_UP);

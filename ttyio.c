@@ -22,14 +22,10 @@
 #include "ttyplatform.h" // used for macros
 
 unibi_term* uterm;
-ttycaps tcaps;
-ttyterm tterm;
+termcaps tcaps;
+Terminal term;
 
-typedef struct {
-    enum input_type input_type;
-} ttyopts;
-
-static ttyopts topts__;
+static enum input_type tty_input_mode__;
 
 // For unix like systems
 #if !defined(_WIN32) && !defined(_WIN64)
@@ -91,12 +87,12 @@ void fatal__(const char* restrict fmt, ...)
 }
 #pragma GCC diagnostic pop
 
-ttycoords tty_size_get__(void)
+Coordinates tty_size_get__(void)
 {
 #if !defined(_WIN32) && !defined(_WIN64)
     struct winsize window;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &window);
-    return (ttycoords){.x = window.ws_col, .y = window.ws_row};
+    return (Coordinates){.x = window.ws_col, .y = window.ws_row};
 #else
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdout == INVALID_HANDLE_VALUE) {
@@ -118,9 +114,9 @@ ttycoords tty_size_get__(void)
 
 void tty_init_caps(void)
 {
-    tterm = (ttyterm){0};
-    tterm.size = tty_size_get__();
-    assert(tterm.size.x && tterm.size.y);
+    term = (Terminal){0};
+    term.size = tty_size_get__();
+    assert(term.size.x && term.size.y);
 
     char* term_name = getenv("TERM");
     if (term_name) {
@@ -142,7 +138,7 @@ void tty_init_caps(void)
 
 void tty_init_input_mode(enum input_type input_type)
 {
-    topts__.input_type = input_type;
+    tty_input_mode__ = input_type;
     if (input_type == TTY_CANONICAL_MODE) {
         return;
     }
@@ -206,9 +202,9 @@ void tty_init(enum input_type input_type)
  */
 void tty_reinit__(void)
 {
-    tterm = (ttyterm){0};
-    tterm.size = tty_size_get__();
-    assert(tterm.size.x && tterm.size.y);
+    term = (Terminal){0};
+    term.size = tty_size_get__();
+    assert(term.size.x && term.size.y);
 }
 
 void tty_deinit_caps(void)
@@ -241,32 +237,32 @@ void tty_deinit(void)
 
 void tty_y_update__(const int printed)
 {
-    if (tterm.pos.y < tterm.size.y - 1) {
+    if (term.pos.y < term.size.y - 1) {
         if (!printed)  {
-            ++tterm.pos.y;
+            ++term.pos.y;
         }
-        else if (tterm.pos.x == tterm.size.x - 1 && printed == 1) {
-            ++tterm.pos.y;
+        else if (term.pos.x == term.size.x - 1 && printed == 1) {
+            ++term.pos.y;
         }
-        else if (tterm.pos.x + printed - 1 >= tterm.size.x) {
-            double new_y = tterm.pos.x + printed / (double)tterm.size.x;
+        else if (term.pos.x + printed - 1 >= term.size.x) {
+            double new_y = term.pos.x + printed / (double)term.size.x;
             if (new_y < 1) {
                 return;
             }
-            tterm.pos.y += (size_t)new_y;
-            if (tterm.pos.y > tterm.size.y) {
-                tterm.pos.y = tterm.size.y - 1;
+            term.pos.y += (size_t)new_y;
+            if (term.pos.y > term.size.y) {
+                term.pos.y = term.size.y - 1;
             }
         }
     }
-    assert(tterm.pos.y < tterm.size.y);
+    assert(term.pos.y < term.size.y);
 }
 
 void tty_size_update__(const int printed)
 {
     assert(printed != EOF);
 #ifndef NDEBUG
-    if (!tterm.size.x || !tterm.size.y) {
+    if (!term.size.x || !term.size.y) {
         fatal__("\nFatal error: term size not set.\n");
     }
 #endif
@@ -274,14 +270,14 @@ void tty_size_update__(const int printed)
         return;
     }
 
-    if (printed + tterm.pos.x > tterm.size.x - 1) {
+    if (printed + term.pos.x > term.size.x - 1) {
         tty_y_update__(printed);
-        tterm.pos.x = printed == 1 ? 0 : (printed % tterm.size.x);
+        term.pos.x = printed == 1 ? 0 : (printed % term.size.x);
     }
     else {
-        tterm.pos.x += printed == 1 ? 1 : printed + 1;
+        term.pos.x += printed == 1 ? 1 : printed + 1;
     }
-    assert(tterm.pos.x < tterm.size.x);
+    assert(term.pos.x < term.size.x);
 }
 
 int tty_putc(char c)
@@ -363,7 +359,7 @@ int tty_dwriteln(int fd, const char* restrict buf, size_t n)
 int tty_puts(const char* restrict str)
 {
     int printed = puts(str);
-    tterm.pos.x = 0;
+    term.pos.x = 0;
     tty_y_update__(0);
     return printed;
 }
@@ -371,7 +367,7 @@ int tty_puts(const char* restrict str)
 int tty_fputs(const char* restrict str, FILE* restrict file)
 {
     int printed = fputs(str, file);
-    tterm.pos.x = 0;
+    term.pos.x = 0;
     tty_send(&tcaps.newline);
     return printed;
 }
@@ -474,46 +470,46 @@ inline void tty_send_update__(cap* restrict c)
 {
     switch (c->type) {
     case CAP_BS:
-        --tterm.pos.x;
+        --term.pos.x;
         break;
     case CAP_CURSOR_HOME: {
-        tterm.pos.x = 0;
-        tterm.pos.y = 0;
+        term.pos.x = 0;
+        term.pos.y = 0;
         break;
     }
     case CAP_CURSOR_RIGHT:
-        ++tterm.pos.x;
+        ++term.pos.x;
         break;
     case CAP_CURSOR_LEFT:
-        --tterm.pos.x;
+        --term.pos.x;
         break;
     case CAP_CURSOR_UP:
-        --tterm.pos.y;
+        --term.pos.y;
         break;
     case CAP_CURSOR_DOWN:
-        ++tterm.pos.y;
+        ++term.pos.y;
         break;
     case CAP_CURSOR_SAVE:
-        tterm.saved_pos.x = tterm.pos.x;
-        tterm.saved_pos.y = tterm.pos.y;
+        term.saved_pos.x = term.pos.x;
+        term.saved_pos.y = term.pos.y;
         break;
     case CAP_CURSOR_RESTORE:
-        tterm.pos.x = tterm.saved_pos.x;
-        tterm.pos.y = tterm.saved_pos.y;
+        term.pos.x = term.saved_pos.x;
+        term.pos.y = term.saved_pos.y;
         break;
     case CAP_NEWLINE:
-        tterm.pos.x = 0;
+        term.pos.x = 0;
         tty_y_update__(0);
         break;
     case CAP_LINE_GOTO_BOL:
-        tterm.pos.x = 0;
+        term.pos.x = 0;
         break;
     default:
         break;
     }
 
-    if (tterm.pos.x >= tterm.size.x && tterm.pos.x > 0) {
-        tterm.pos.x = tterm.size.x % tterm.pos.x;
+    if (term.pos.x >= term.size.x && term.pos.x > 0) {
+        term.pos.x = term.size.x % term.pos.x;
     }
 }
 
@@ -525,8 +521,8 @@ int tty_send(cap* restrict c)
     fflush(stdout);
 
     tty_send_update__(c);
-    assert(tterm.pos.y <= tterm.size.y);
-    assert(tterm.pos.x <= tterm.size.x);
+    assert(term.pos.y <= term.size.y);
+    assert(term.pos.x <= term.size.x);
     return 0;
 }
 
@@ -538,8 +534,8 @@ int tty_fsend(cap* restrict c, FILE* restrict file)
 
     tty_send_update__(c);
 
-    assert(tterm.pos.y < tterm.size.y);
-    assert(tterm.pos.x < tterm.size.x);
+    assert(term.pos.y < term.size.y);
+    assert(term.pos.x < term.size.x);
     return 0;
 }
 
@@ -609,34 +605,34 @@ int tty_goto_prev_eol(void)
 {
     if (tcaps.line_goto_prev_eol.fallback == FB_NONE) {
         char buf[TTY_BUF_SIZE] = {0};
-        assert(tterm.pos.y > 0);
+        assert(term.pos.y > 0);
         // if y is 0 scroll up?
         size_t len = unibi_run(tcaps.cursor_pos.val,
                         (unibi_var_t[9]){
-                            [0] = unibi_var_from_num(tterm.pos.y == 0 ? 0 : tterm.pos.y - 1),
-                            [1] = unibi_var_from_num(tterm.size.x - 1)
+                            [0] = unibi_var_from_num(term.pos.y == 0 ? 0 : term.pos.y - 1),
+                            [1] = unibi_var_from_num(term.size.x - 1)
                         },
                         buf, TTY_BUF_SIZE);
 
         if (write(STDOUT_FILENO, buf, len) == -1)
             return 1;
         fflush(stdout);
-        tterm.pos.x = tterm.size.x - 1;
-        --tterm.pos.y;
+        term.pos.x = term.size.x - 1;
+        --term.pos.y;
 
-        assert(tterm.pos.y < tterm.size.y);
-        assert(tterm.pos.x < tterm.size.x);
+        assert(term.pos.y < term.size.y);
+        assert(term.pos.x < term.size.x);
         return 0;
     }
     if (tcaps.line_goto_prev_eol.fallback >= FB_NONE) {
         tty_send(&tcaps.cursor_up);
-        tty_send_n(&tcaps.cursor_right, tterm.size.x - tterm.pos.x - 1);
+        tty_send_n(&tcaps.cursor_right, term.size.x - term.pos.x - 1);
         fflush(stdout);
-        tterm.pos.x = tterm.size.x - 1;
-        --tterm.pos.y;
+        term.pos.x = term.size.x - 1;
+        --term.pos.y;
 
-        assert(tterm.pos.y < tterm.size.y);
-        assert(tterm.pos.x < tterm.size.x);
+        assert(term.pos.y < term.size.y);
+        assert(term.pos.x < term.size.x);
         return 0;
     }
 
