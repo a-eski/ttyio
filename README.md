@@ -1,10 +1,8 @@
 # ttyio
 
-A lightweight wrapper library for unibilium.
-
 Useful for writing CLI/REPL/shell applications.
 
-Still in very very early stages of development.
+A lightweight wrapper library for unibilium.
 
 ## Features
 
@@ -169,3 +167,4 @@ Props to Neovim maintainers and [unibilium](https://github.com/neovim/unibilium/
 
 * Make fallback to ASCII control characters configurable.
 * If color is greater than tcaps.color_max, try to use a reasonably similar color less than the current max color.
+
