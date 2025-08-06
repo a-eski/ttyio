@@ -422,6 +422,7 @@ int tty_fprintln(FILE* restrict file, const char* restrict fmt, ...)
     fflush(stdout);
 
     tty_size_update__(printed);
+    tty_fsend(&tcaps.newline, file);
     return printed;
 }
 
@@ -448,7 +449,7 @@ int tty_dprintln(int fd, const char* restrict fmt, ...)
     fflush(stdout);
 
     tty_size_update__(printed);
-    tty_send(&tcaps.newline);
+    tty_dsend(fd, &tcaps.newline);
     return printed;
 }
 
