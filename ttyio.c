@@ -127,6 +127,7 @@ void tty_init_caps(void)
         char* term_type;
         uterm = terminfo_from_builtin(term_name, &term_type);
         setenv("TERM", term_type, 1);
+        free(term_type);
     }
 
     if (!uterm) {
