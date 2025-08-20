@@ -1,6 +1,6 @@
 # ttyio
 
-<img src="images/ttyio.png" alt="ttyio logo" style="width:50%; height:auto;">
+<img src="images/ttyio.png" alt="ttyio logo" style="width:70%; height:auto;">
 
 A low level, cross-platform, terminal output library for writing CLIs, REPLs, and shells.
 
@@ -176,6 +176,8 @@ The input modes are optional.
 ## Props
 
 Props to Neovim maintainers and [unibilium](https://github.com/neovim/unibilium/tree/master).
+
+Logo generated using AI.
 
 ## Todos
 
