@@ -173,7 +173,7 @@ The input modes are optional.
 * tty_dsend_n: call tty_dsend n times
 * tty_fsend_n: call tty_fsend n times
 
-## Unibilium
+## Props
 
 Props to Neovim maintainers and [unibilium](https://github.com/neovim/unibilium/tree/master).
 

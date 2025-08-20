@@ -28,12 +28,6 @@ typedef struct {
     Coordinates saved_pos;
 } Terminal;
 
-typedef struct {
-    termcaps tcaps;
-    Terminal term;
-    void* uterm;
-} ttyio;
-
 /* enum input_type
  * Canonical: read line by line, only get the line after user presses enter. a lot of programs work this way.
  * Noncanonical: read character by character. programs who need control over each input need to use this.
