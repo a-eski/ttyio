@@ -1,6 +1,6 @@
-<img src="images/ttyio.png" alt="ttyio logo" style="width:50%; height:auto;">
-
 # ttyio
+
+<img src="images/ttyio.png" alt="ttyio logo" style="width:50%; height:auto;">
 
 A low level, cross-platform, terminal output library for writing CLIs, REPLs, and shells.
 
