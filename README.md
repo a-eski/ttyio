@@ -1,5 +1,7 @@
 # ttyio
 
+[<img src="images/ttyio.png" alt="ttyio logo">]
+
 A low level, cross-platform, terminal output library for writing CLIs, REPLs, and shells.
 
 ttyio is a lightweight wrapper library for unibilium.
@@ -25,7 +27,7 @@ After experiencing some of the issues with the custom ASCII implementation over 
 
 Then, I found unibilium. I use neovim, and was searching through the repo, wondering how they handled terminal output, and I noticed unibilium. I thought that neovim used ncurses or lib/tinfo (and maybe they did in the past), but it seems they started maintaining a fork of unibilium for their own purposes and using that. Unibilium was a dream compared to GNU termcap, so I started experimenting with it. Neovim unibilium Fork: https://github.com/neovim/unibilium/tree/master
 
-After a while of messing around with unibilium, I decided to incorporate it into my shell. However, I didn't want to couple output everywhere in the terminal to unibilium, so I ended up writing this wrapper for unibilium called ttyio. It isn't a line reader, but a way to portably send output to stdin while respecting terminfo on different platforms and terminals. 
+After a while of messing around with unibilium, I decided to incorporate it into my shell. However, I didn't want to couple output everywhere in the terminal to unibilium, so I ended up writing this wrapper for unibilium called ttyio. It isn't a line reader, but a way to portably send output to stdin while respecting terminfo on different platforms and terminals.
 
 ## Supported Platforms
 
