@@ -630,8 +630,6 @@ int tty_goto_prev_eol(void)
         tty_send(&tcaps.cursor_up);
         tty_send_n(&tcaps.cursor_right, term.size.x - term.pos.x - 1);
         fflush(stdout);
-        term.pos.x = term.size.x - 1;
-        --term.pos.y;
 
         assert(term.pos.y < term.size.y);
         assert(term.pos.x < term.size.x);
