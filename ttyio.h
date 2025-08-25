@@ -10,6 +10,9 @@
  */
 
 #include "tcaps.h"
+#if __STDC_VERSION__ >= 202311L /* C23 */
+#include <stdint.h>
+#endif
 
 #define TTYIO_RED_ERROR 196
 
@@ -33,7 +36,7 @@ typedef struct {
  * Noncanonical: read character by character. programs who need control over each input need to use this.
  */
 #if __STDC_VERSION__ >= 202311L /* C23 */
-enum input_type: unsigned char {
+enum input_type: uint8_t {
     TTY_NONE = 0,
     TTY_CANONICAL_MODE = 1,
     TTY_NONCANONICAL_MODE = 2
