@@ -37,7 +37,6 @@ else
 	cc_with_flags = $(CC) $(STDFLAG) $(CFLAGS) $(DEFINES)
 endif
 
-
 ifneq ($(OS),Windows_NT)
   	TERMINFO="$(shell ncursesw6-config --terminfo 2>/dev/null || \
                          ncurses6-config  --terminfo 2>/dev/null || \
