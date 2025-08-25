@@ -6,7 +6,12 @@
 #define TTYPLATFORM_GUARD_H_
 
 // Definitions needed for all unix like envirnoments. Includes unistd in unix like environments
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__) || defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
+
+#if __STDC_VERSION__ >= 202311L && __has_include(<unistd.h>) /* C23 */
+
+#   include <unistd.h>
+
+#elif defined(__linux__) || defined(__unix__) || defined(__APPLE__) || defined(__MINGW32__) || defined(__MINGW64__) || defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
 
 #   include <unistd.h>
 

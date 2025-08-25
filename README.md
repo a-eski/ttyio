@@ -17,32 +17,20 @@ ttyio is a lightweight wrapper library for unibilium.
 * Advanced capabilities with multiple fallbacks.
 * Compilable with C99, but uses C23 features when available.
 
-## Why?
-
-I had been working on a shell for just under a year. I didn't want to use ncurses, termbox2, notcurses, pdcurses, etc., some of the most common suggestions for handling terminal output in C. Why? They just seemed like overkill for my use case. It's a shell, it's a REPL, not a TUI or some other complex interface. Let modern terminals handle the scrollback and that other stuff, they already do. I don't need to track all of that in memory and rerender all of the time, it seemed wasteful.
-
-So not wanting to take on those dependencies, at first I made a custom implementation using ASCII control characters. Its not great, but it worked on most 256 color terminals. It has some issues, including not being portable (not reliably working on terminals less that 256 colors or older terminals), but you don't need to track scrollback or the exact position on the screen. It only tracked relative position. It had some bugs with restore cursor when the screen scrolled down (because it wasn't updating the saved cursor position), but besides that it worked for multiline and all of those kinds of inputs tracking relative position. However, I wanted something more portable and maintainable.
-
-After experiencing some of the issues with the custom ASCII implementation over the past almost year, I went looking for another solution. I tried GNU readline, bestline, linenoise, GNU termcaps, ncurses, termbox2, etc. GNU readline is the default choice in cases like this, although if you want something out of the box I really recommend bestline. GNU readline (and other line readers) didn’t support the kind of autocompletions I wanted, and would have been a lot of effort to add those autocompletions in a fork. ncurses is great for TUI's, but I didn't want to deal with the overhead from it or the idioms it forces. Termbox2 isn't purpose built for shells/REPLs, but it's awesome for TUIs. GNU termcaps would work fine, but you do need to do a lot to get it working correctly portably, and it is obsolete. GNU now recommends using lib/tinfo from ncurses instead of GNU termcap. Linenoise had some of the same issues as readline.
-
-Then, I found unibilium. I use neovim, and was searching through the repo, wondering how they handled terminal output, and I noticed unibilium. I thought that neovim used ncurses or lib/tinfo (and maybe they did in the past), but it seems they started maintaining a fork of unibilium for their own purposes and using that. Unibilium was a dream compared to GNU termcap, so I started experimenting with it. Neovim unibilium Fork: https://github.com/neovim/unibilium/tree/master
-
-After a while of messing around with unibilium, I decided to incorporate it into my shell. However, I didn't want to couple output everywhere in the terminal to unibilium, so I ended up writing this wrapper for unibilium called ttyio. It isn't a line reader, but a way to portably send output to stdin while respecting terminfo on different platforms and terminals.
-
 ## Supported Platforms
 
 * Linux/WSL
   * gcc
   * clang
+  * tcc
 * Windows
-  * MSYS2 (ucrt64, clang64, mingw32, clangarm64)
+  * MSYS2 (ucrt64, clang64, mingw64, mingw32, clangarm64)
   * Cygwin
   * w64devkit
 * Apple
-  * *only tested compilation*
+  * *only tested compilation. if you have a mac and test ttyio, please let me know!*
   * Tested compilation for both x84_64 and aarch64.
 * BSDs
-  * *only tested in VM*
   * FreeBSD
   * OpenBSD
   * NetBSD
@@ -183,3 +171,15 @@ Logo generated using AI.
 
 * Make fallback to ASCII control characters configurable.
 * If color is greater than tcaps.color_max, try to use a reasonably similar color less than the current max color.
+
+## Why?
+
+I had been working on a shell for just under a year. I didn't want to use ncurses, termbox2, notcurses, pdcurses, etc., some of the most common suggestions for handling terminal output in C. Why? They just seemed like overkill for my use case. It's a shell, it's a REPL, not a TUI or some other complex interface. Let modern terminals handle the scrollback and that other stuff, they already do. I don't need to track all of that in memory and rerender all of the time, it seemed wasteful.
+
+So not wanting to take on those dependencies, at first I made a custom implementation using ASCII control characters. Its not great, but it worked on most 256 color terminals. It has some issues, including not being portable (not reliably working on terminals less that 256 colors or older terminals), but you don't need to track scrollback or the exact position on the screen. It only tracked relative position. It had some bugs with restore cursor when the screen scrolled down (because it wasn't updating the saved cursor position), but besides that it worked for multiline and all of those kinds of inputs tracking relative position. However, I wanted something more portable and maintainable.
+
+After experiencing some of the issues with the custom ASCII implementation over the past almost year, I went looking for another solution. I tried GNU readline, bestline, linenoise, GNU termcaps, ncurses, termbox2, etc. GNU readline is the default choice in cases like this, although if you want something out of the box I really recommend bestline. GNU readline (and other line readers) didn’t support the kind of autocompletions I wanted, and would have been a lot of effort to add those autocompletions in a fork. ncurses is great for TUI's, but I didn't want to deal with the overhead from it or the idioms it forces. Termbox2 isn't purpose built for shells/REPLs, but it's awesome for TUIs. GNU termcaps would work fine, but you do need to do a lot to get it working correctly portably, and it is obsolete. GNU now recommends using lib/tinfo from ncurses instead of GNU termcap. Linenoise had some of the same issues as readline.
+
+Then, I found unibilium. I use neovim, and was searching through the repo, wondering how they handled terminal output, and I noticed unibilium. I thought that neovim used ncurses or lib/tinfo (and maybe they did in the past), but it seems they started maintaining a fork of unibilium for their own purposes and using that. Unibilium was a dream compared to GNU termcap, so I started experimenting with it. Neovim unibilium Fork: https://github.com/neovim/unibilium/tree/master
+
+After a while of messing around with unibilium, I decided to incorporate it into my shell. However, I didn't want to couple output everywhere in the terminal to unibilium, so I ended up writing this wrapper for unibilium called ttyio. It isn't a line reader, but a way to portably send output to stdin while respecting terminfo on different platforms and terminals.
