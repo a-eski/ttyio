@@ -62,8 +62,6 @@ int win_vdprintf__(int fd, const char* restrict fmt, ...) {
 
 #   define vdprintf(fd, fmt, args) win_vdprintf__(fd, fmt, args)
 
-#   define setenv(name, value, replace) _putenv_s(name, value)
-
 static DWORD omode__;
 
 #endif /* if !defined(_WIN32) && !defined(_WIN64) */
@@ -126,7 +124,6 @@ void tty_init_caps(void)
     if (!uterm) {
         char* term_type;
         uterm = terminfo_from_builtin(term_name, &term_type);
-        setenv("TERM", term_type, 1);
         free(term_type);
     }
 
