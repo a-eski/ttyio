@@ -14,7 +14,11 @@ debug_flags = $(main_flags) -D_FORTIFY_SOURCE=3 -g
 
 release_flags = $(main_flags) -O3 -ffast-math -march=native -DNDEBUG
 
-objects = obj/main.o obj/ttyio.o obj/terminfo.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
+target_object = obj/main.o
+# target_object = obj/line.o
+# target_object = obj/color.o
+# target_object = obj/repl.o
+objects = $(target_object) obj/ttyio.o obj/terminfo.o obj/tcaps.o obj/unibilium.o obj/uninames.o obj/uniutil.o
 target = u
 
 ifeq ($(CC), gcc)

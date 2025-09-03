@@ -87,8 +87,7 @@ void tcaps_init_opts(bool init_advanced_caps)
 
 void tcaps_init_keys(void)
 {
-    // TODO: backspace currently only uses the fallback,
-    // investigate using unibi cap.
+    // TODO: backspace currently only uses the fallback, investigate using unibi cap.
     // tcaps.bs = cap_New_Lit(FB_BS, CAP_BS);
     tcaps.bs = cap_New_Lit(FB_BS, CAP_BS);
 
@@ -151,6 +150,12 @@ void tcaps_init_cursor(void)
 
     const char* cursor_pos = unibi_get_str(uterm, unibi_cursor_address);
     tcaps_set_no_fb(cursor_pos, tcaps.cursor_pos, CAP_CURSOR_POS);
+
+    const char* col_address = unibi_get_str(uterm, unibi_column_address);
+    tcaps_set_no_fb(col_address, tcaps.col_address, CAP_COL_ADDRESS);
+
+    const char* row_address = unibi_get_str(uterm, unibi_row_address);
+    tcaps_set_no_fb(row_address, tcaps.row_address, CAP_ROW_ADDRESS);
 }
 
 void tcaps_init_line(void)

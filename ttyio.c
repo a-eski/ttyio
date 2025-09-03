@@ -21,6 +21,8 @@
 #include "ttyio.h"
 #include "ttyplatform.h" // used for macros
 
+#define TTY_BUF_SIZE 64
+
 unibi_term* uterm;
 termcaps tcaps;
 Terminal term;
@@ -67,9 +69,6 @@ static DWORD omode__;
 #endif /* if !defined(_WIN32) && !defined(_WIN64) */
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-
-#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 
 void fatal__(const char* restrict fmt, ...)
@@ -83,6 +82,7 @@ void fatal__(const char* restrict fmt, ...)
 
     abort();
 }
+
 #pragma GCC diagnostic pop
 
 Coordinates tty_size_get__(void)
@@ -108,6 +108,39 @@ Coordinates tty_size_get__(void)
 
     return (Coordinates){.x = columns, .y = rows};
 #endif
+}
+
+void tty_init_pos__(void)
+{
+    // NOTE: unibilium doesnt have a way to query the cursor position.
+    // Need to query the terminal for the position on start,
+    // so ttyio's tracking is accurate.
+    // response format from terminal is "/033[{row};{col}R"
+    write(STDOUT_FILENO, "\033[6n", 4);
+
+    char buf[TTY_BUF_SIZE];
+    int i = 0;
+    while (i < (int)sizeof(buf) - 1) {
+        if (read(STDIN_FILENO, &buf[i], 1) != 1)
+            break;
+        if (buf[i] == 'R')
+            break;
+        i++;
+    }
+    buf[i] = '\0';
+
+    if (buf[0] != '\033' || buf[1] != '[')
+        return;
+
+    int row, col;
+    if (sscanf(buf + 2, "%d;%d", &row, &col) != 2)
+        return;
+
+    term.pos.x = col > 0 ? (size_t)col - 1 : 0;
+    term.pos.y = row > 0 ? (size_t)row - 1 : 0;
+
+    assert(term.pos.x == 0 || term.pos.x < term.size.x);
+    assert(term.pos.y == 0 || term.pos.y < term.size.y);
 }
 
 void tty_init_caps(void)
@@ -186,6 +219,8 @@ void tty_init_input_mode(enum input_type input_type)
         fatal__("\nCould not set terminal info to set to noncanonical mode.\n");
     }
 #endif
+
+    tty_init_pos__();
 }
 
 void tty_init(enum input_type input_type)
@@ -242,7 +277,7 @@ void tty_y_update__(const int printed)
         else if (term.pos.x == term.size.x - 1 && printed == 1) {
             ++term.pos.y;
         }
-        else if (term.pos.x + printed - 1 >= term.size.x) {
+        else if (term.pos.x + (size_t)printed - 1 >= term.size.x) {
             double new_y = term.pos.x + printed / (double)term.size.x;
             if (new_y < 1) {
                 return;
@@ -268,12 +303,12 @@ void tty_size_update__(const int printed)
         return;
     }
 
-    if (printed + term.pos.x > term.size.x - 1) {
+    if ((size_t)printed + term.pos.x > term.size.x - 1) {
         tty_y_update__(printed);
-        term.pos.x = printed == 1 ? 0 : (printed % term.size.x);
+        term.pos.x = (size_t)(printed == 1 ? 0 : ((size_t)printed % term.size.x));
     }
     else {
-        term.pos.x += printed == 1 ? 1 : printed + 1;
+        term.pos.x += (size_t)(printed == 1 ? 1 : printed + 1);
     }
     assert(term.pos.x < term.size.x);
 }
@@ -282,14 +317,18 @@ int tty_putc(char c)
 {
     _MAYBE_UNUSED_ int printed = write(STDOUT_FILENO, &c, 1);
     assert(printed != EOF && printed == 1);
+    // _MAYBE_UNUSED_ int printed_char = putchar(c);
+    // assert(printed_char != EOF && printed_char == c);
     tty_size_update__(1);
     return 1;
 }
 
 int tty_fputc(FILE* restrict file, char c)
 {
-    _MAYBE_UNUSED_ int printed = write(fileno(file), &c, 1);
-    assert(printed != EOF && printed == 1);
+    // _MAYBE_UNUSED_ int printed = write(fileno(file), &c, 1);
+    // assert(printed != EOF && printed == 1);
+    _MAYBE_UNUSED_ int printed_char = fputc(c, file);
+    assert(printed_char != EOF && printed_char == c);
     tty_size_update__(1);
     return 1;
 }
@@ -571,7 +610,6 @@ void tty_dsend_n(int fd, cap* restrict c, size_t n)
     }
 }
 
-#define TTY_BUF_SIZE 64
 int tty_color_set(int color)
 {
     if (!tcaps.color_max)
@@ -602,7 +640,8 @@ int tty_color_bg_set(int color)
 
 int tty_goto_prev_eol(void)
 {
-    if (tcaps.line_goto_prev_eol.fallback == FB_NONE) {
+    // TODO: review this and rework, it scrolls up multiple times instead of 1 in some cases.
+    /*if (tcaps.line_goto_prev_eol.fallback == FB_NONE) {
         char buf[TTY_BUF_SIZE] = {0};
         assert(term.pos.y > 0);
         // if y is 0 scroll up?
@@ -622,7 +661,7 @@ int tty_goto_prev_eol(void)
         assert(term.pos.y < term.size.y);
         assert(term.pos.x < term.size.x);
         return 0;
-    }
+    }*/
     if (tcaps.line_goto_prev_eol.fallback >= FB_NONE) {
         tty_send(&tcaps.cursor_up);
         tty_send_n(&tcaps.cursor_right, term.size.x - term.pos.x - 1);
@@ -637,4 +676,20 @@ int tty_goto_prev_eol(void)
     return -1;
 }
 
-#pragma GCC diagnostic pop
+int tty_line_adjust(void)
+{
+    // Is eol
+    if (term.pos.x == term.size.x - 1) {
+        tty_putc(' ');
+        return 1;
+    }
+
+    // is start of line?
+    if (term.pos.x == 0) {
+        tty_send(&tcaps.line_clr_to_eol);
+        tty_goto_prev_eol();
+        return -1;
+    }
+
+    return 0;
+}
