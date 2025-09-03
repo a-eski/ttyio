@@ -103,10 +103,13 @@ Coordinates tty_size_get__(void)
         fatal__("\nCould not get screen info to determine size.\n");
     }
 
-    int columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-    int rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+    int col = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    int row = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 
-    return (Coordinates){.x = columns, .y = rows};
+    assert(col > 0);
+    assert(row > 0);
+
+    return (Coordinates){.x = (size_t)col, .y = (size_t)row};
 #endif
 }
 
@@ -210,7 +213,7 @@ void tty_init_input_mode(enum input_type input_type)
     omode__ = mode;
 
     // Disable line input and echo input
-    mode &= ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+    mode &= ~(DWORD)(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 
     // mode &= ~(ENABLE_PROCESSED_INPUT);
 
