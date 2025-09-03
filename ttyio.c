@@ -640,7 +640,7 @@ int tty_color_bg_set(int color)
 
 int tty_goto_prev_eol(void)
 {
-    // TODO: review this and rework, it scrolls up multiple times instead of 1.
+    // TODO: review this and rework, it scrolls up multiple times instead of 1 in some cases.
     /*if (tcaps.line_goto_prev_eol.fallback == FB_NONE) {
         char buf[TTY_BUF_SIZE] = {0};
         assert(term.pos.y > 0);
