@@ -1,8 +1,6 @@
 #include <assert.h>
 #include <limits.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "../ttyio.h"
 
@@ -34,12 +32,12 @@ int main(void)
         switch (c) {
             case 127:
                 tty_send(&tcaps.bs);
-                tty_line_adjust();
                 break;
             default:
                 tty_putc(c);
                 break;
         }
+        tty_line_adjust();
     }
 
     tty_send(&tcaps.newline);

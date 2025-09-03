@@ -315,14 +315,18 @@ void tty_size_update__(const int printed)
 
 int tty_putc(char c)
 {
-    _MAYBE_UNUSED_ int printed_char = putchar(c);
-    assert(printed_char != EOF && printed_char == c);
+    _MAYBE_UNUSED_ int printed = write(STDOUT_FILENO, &c, 1);
+    assert(printed != EOF && printed == 1);
+    // _MAYBE_UNUSED_ int printed_char = putchar(c);
+    // assert(printed_char != EOF && printed_char == c);
     tty_size_update__(1);
     return 1;
 }
 
 int tty_fputc(FILE* restrict file, char c)
 {
+    // _MAYBE_UNUSED_ int printed = write(fileno(file), &c, 1);
+    // assert(printed != EOF && printed == 1);
     _MAYBE_UNUSED_ int printed_char = fputc(c, file);
     assert(printed_char != EOF && printed_char == c);
     tty_size_update__(1);
@@ -672,16 +676,16 @@ int tty_goto_prev_eol(void)
     return -1;
 }
 
-int tty_line_adjust()
+int tty_line_adjust(void)
 {
     // Is eol
-    if (term.pos.x >= term.size.x - 1) {
+    if (term.pos.x == term.size.x - 1) {
+        tty_putc(' ');
         return 1;
     }
 
     // is start of line?
-    if (term.pos.x <= 1) {
-    // if (term.pos.y > 0 && term.pos.x == 0) {
+    if (term.pos.x == 0) {
         tty_send(&tcaps.line_clr_to_eol);
         tty_goto_prev_eol();
         return -1;
