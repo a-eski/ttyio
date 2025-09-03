@@ -34,15 +34,18 @@ enum caps {
     CAP_CURSOR_HIDE,
     CAP_CURSOR_SAVE,
     CAP_CURSOR_RESTORE,
-    CAP_CURSOR_POS,
+    CAP_CURSOR_POS,         // set cursor position
 
     CAP_LINE_CLR_TO_EOL,
     CAP_LINE_CLR_TO_BOL,
-    CAP_LINE_GOTO_BOL, // i.e. carriage return
+    CAP_LINE_GOTO_BOL,      // i.e. carriage return
 
     CAP_COLOR_RESET,
     CAP_COLOR_SET,
     CAP_COLOR_BG_SET,
+
+    CAP_COL_ADDRESS,        // sets the column position
+    CAP_ROW_ADDRESS,        // sets the row position
     CAPS_END
 };
 
@@ -93,6 +96,8 @@ typedef struct {
     cap color_set;
     cap color_bg_set;
 
+    cap col_address;
+    cap row_address;
 } termcaps;
 
 /* Init all caps */

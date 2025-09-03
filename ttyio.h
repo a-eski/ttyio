@@ -115,6 +115,9 @@ int tty_color_bg_set(int color);
  */
 int tty_goto_prev_eol(void);
 
+/* Send the cursor to previous eol when hitting size of x */
+int tty_line_adjust();
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

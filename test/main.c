@@ -7,6 +7,12 @@
 #include "../ttyio.h"
 #include "../ttyplatform.h"
 
+/* main: a variety of tests and example usage */
+/* These tests were done with term.size.x 171, term.size.y 46
+ * The x size doesn't need to be exact for the tests, but the y does if NDEBUG not defined.
+ * The tests are currently dependent on ordering.
+ */
+
 /* Internal testing method that reinits the term variable, doesn't free memory from unibilium or touch tcaps. */
 void tty_reinit__(void);
 /* Internal method that updates x and y, used here for testing */
@@ -370,14 +376,11 @@ void bg_colors_test(void)
     assert(term.pos.y == 45);
 }
 
-/* example usage */
-/* These tests were done with term.size.x 171, term.size.y 46
- * The tests are currently dependent on ordering.
- */
 int main(void)
 {
     tty_init(TTY_NONCANONICAL_MODE);
 
+    scr_clear_then_home_test();
     tty_y_update_tests();
     tty_reinit__(); // reinit after messing with sizes for testing
     tty_size_update_tests();
