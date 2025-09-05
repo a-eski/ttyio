@@ -5,12 +5,11 @@
 #include "../ttyio.h"
 #include "common.h"
 
-#define PROMPT "alex alex/ttyio > "
+#define PROMPT "ttyio > "
 void prompt()
 {
-    static_assert(sizeof(PROMPT) - 1 == 18);
+    static_assert(sizeof(PROMPT) - 1 == 8);
     tty_write(PROMPT, sizeof(PROMPT) - 1);
-    fflush(stdout);
     assert(term.pos.x == sizeof(PROMPT));
 }
 
@@ -20,15 +19,9 @@ int main(void)
     tty_init(TTY_NONCANONICAL_MODE);
 
     char c;
-    bool reprompt = false;
     prompt();
 
     while (read(STDIN_FILENO, &c, 1) > 0) {
-        if (reprompt) {
-            prompt();
-            reprompt = false;
-        }
-
         trap_on(c == (int)'q');
         switch (c) {
             case 127:
@@ -36,9 +29,10 @@ int main(void)
                 tty_send(&tcaps.bs);
                 fflush(stdout);
                 break;
+            case '\r':
             case '\n':
-                reprompt = true;
                 tty_send(&tcaps.newline);
+                prompt();
                 break;
             default:
                 tty_putc(c);

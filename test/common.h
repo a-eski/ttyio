@@ -17,9 +17,8 @@
 #define assert_trap(expr)                                                  \
     do {                                                                   \
         if (!(expr)) {                                                     \
-            tty_send(&tcaps.newline);                                      \
-            tty_println("%s %s %d", __FILE__, __func__, __LINE__);         \
             tty_println("triggered at %zu, %zu", term.pos.x, term.pos.y);  \
+            tty_println("%s %s %d", __FILE__, __func__, __LINE__);         \
             tty_println("size is %zu, %zu", term.size.x, term.size.y);     \
             TRAP();                                                        \
         }                                                                  \
@@ -37,9 +36,8 @@
 #define trap_on(expr)                                                      \
     do {                                                                   \
         if (expr) {                                                        \
-            tty_send(&tcaps.newline);                                      \
-            tty_println("%s %s %d", __FILE__, __func__, __LINE__);         \
             tty_println("triggered at %zu, %zu", term.pos.x, term.pos.y);  \
+            tty_println("%s %s %d", __FILE__, __func__, __LINE__);         \
             tty_println("size is %zu, %zu", term.size.x, term.size.y);     \
             TRAP();                                                        \
         }                                                                  \

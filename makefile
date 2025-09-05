@@ -14,6 +14,7 @@ debug_flags = $(main_flags) -D_FORTIFY_SOURCE=3 -g
 
 release_flags = $(main_flags) -O3 -ffast-math -march=native -DNDEBUG
 
+# target_object = obj/example.o
 # target_object = obj/main.o
 # target_object = obj/line.o
 # target_object = obj/color.o
