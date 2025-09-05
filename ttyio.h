@@ -115,10 +115,8 @@ int tty_color_bg_set(int color);
  */
 int tty_goto_prev_eol(void);
 
-/* Handle moving cursor to next line or previous line. */
-int tty_line_adjust(void);
-/* Same as above, just won't move cursor above term.start.x or term.start.y */
-// void tty_line_adjust_ckd(void);
+/* Handle moving cursor to previous line when needed. Returns -1 if moved up or 0 if no movement. */
+int tty_y_adjust(void);
 
 #ifdef __cplusplus
 }

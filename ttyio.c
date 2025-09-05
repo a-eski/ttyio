@@ -90,6 +90,8 @@ Coordinates tty_size_get__(void)
 #if !defined(_WIN32) && !defined(_WIN64)
     struct winsize window;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &window);
+    assert(window.ws_col > 0);
+    assert(window.ws_row > 0);
     return (Coordinates){.x = window.ws_col, .y = window.ws_row};
 #else
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -119,7 +121,8 @@ void tty_init_pos__(void)
     // Need to query the terminal for the position on start,
     // so ttyio's tracking is accurate.
     // response format from terminal is "/033[{row};{col}R"
-    write(STDOUT_FILENO, "\033[6n", 4);
+    if (write(STDOUT_FILENO, "\033[6n", 4) == -1)
+        return;
 
     char buf[TTY_BUF_SIZE];
     int i = 0;
@@ -142,8 +145,8 @@ void tty_init_pos__(void)
     term.pos.x = col > 0 ? (size_t)col - 1 : 0;
     term.pos.y = row > 0 ? (size_t)row - 1 : 0;
 
-    assert(term.pos.x == 0 || term.pos.x < term.size.x);
-    assert(term.pos.y == 0 || term.pos.y < term.size.y);
+    assert(term.pos.x == 0 || term.pos.x <= term.size.x);
+    assert(term.pos.y == 0 || term.pos.y <= term.size.y);
 }
 
 void tty_init_caps(void)
@@ -187,11 +190,14 @@ void tty_init_input_mode(enum input_type input_type)
         perror("Could not get terminal settings");
         exit(EXIT_FAILURE);
     }
-    // mouse support? investigate
+    // TODO: mouse support? investigate
     // printf("\x1b[?1049h\x1b[0m\x1b[2J\x1b[?1003h\x1b[?1015h\x1b[?1006h\x1b[?25l");
 
     struct termios tios = otios__;
-    tios.c_lflag &= (tcflag_t) ~(ICANON | ECHO);
+    tios.c_iflag &= (tcflag_t) ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+    tios.c_lflag &= (tcflag_t) ~(ECHO | ICANON | IEXTEN | ISIG);
+    tios.c_iflag |= IUTF8;
+    tios.c_cflag |= CS8;
     tios.c_cc[VMIN] = 1;
     tios.c_cc[VTIME] = 0;
 
@@ -213,7 +219,7 @@ void tty_init_input_mode(enum input_type input_type)
     omode__ = mode;
 
     // Disable line input and echo input
-    mode &= ~(DWORD)(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+    mode &= (DWORD)~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 
     // mode &= ~(ENABLE_PROCESSED_INPUT);
 
@@ -273,30 +279,32 @@ void tty_deinit(void)
 
 void tty_y_update__(const int printed)
 {
-    if (term.pos.y < term.size.y - 1) {
+    if (term.pos.y < term.size.y) {
         if (!printed)  {
             ++term.pos.y;
         }
-        else if (term.pos.x == term.size.x - 1 && printed == 1) {
+        else if (term.pos.x == term.size.x && printed == 1) {
             ++term.pos.y;
         }
-        else if (term.pos.x + (size_t)printed - 1 >= term.size.x) {
+        else if (term.pos.x + (size_t)printed >= term.size.x) {
             double new_y = term.pos.x + printed / (double)term.size.x;
             if (new_y < 1) {
                 return;
             }
             term.pos.y += (size_t)new_y;
             if (term.pos.y > term.size.y) {
-                term.pos.y = term.size.y - 1;
+                term.pos.y = term.size.y;
             }
         }
     }
-    assert(term.pos.y < term.size.y);
+    assert(term.pos.y <= term.size.y);
 }
 
 void tty_size_update__(const int printed)
 {
     assert(printed != EOF);
+    assert(term.size.x > 0);
+    assert(term.size.y > 0);
 #ifndef NDEBUG
     if (!term.size.x || !term.size.y) {
         fatal__("\nFatal error: term size not set.\n");
@@ -306,32 +314,27 @@ void tty_size_update__(const int printed)
         return;
     }
 
-    if ((size_t)printed + term.pos.x > term.size.x - 1) {
+    if ((size_t)printed + term.pos.x > term.size.x) {
         tty_y_update__(printed);
         term.pos.x = (size_t)(printed == 1 ? 0 : ((size_t)printed % term.size.x));
     }
     else {
         term.pos.x += (size_t)(printed == 1 ? 1 : printed + 1);
     }
-    assert(term.pos.x < term.size.x);
 }
 
 int tty_putc(char c)
 {
     _MAYBE_UNUSED_ int printed = write(STDOUT_FILENO, &c, 1);
     assert(printed != EOF && printed == 1);
-    // _MAYBE_UNUSED_ int printed_char = putchar(c);
-    // assert(printed_char != EOF && printed_char == c);
     tty_size_update__(1);
     return 1;
 }
 
 int tty_fputc(FILE* restrict file, char c)
 {
-    // _MAYBE_UNUSED_ int printed = write(fileno(file), &c, 1);
-    // assert(printed != EOF && printed == 1);
-    _MAYBE_UNUSED_ int printed_char = fputc(c, file);
-    assert(printed_char != EOF && printed_char == c);
+    _MAYBE_UNUSED_ int printed = write(fileno(file), &c, 1);
+    assert(printed != EOF && printed == 1);
     tty_size_update__(1);
     return 1;
 }
@@ -552,6 +555,8 @@ inline void tty_send_update__(cap* restrict c)
     if (term.pos.x >= term.size.x && term.pos.x > 0) {
         term.pos.x = term.size.x % term.pos.x;
     }
+    assert(term.pos.x <= term.size.x);
+    assert(term.pos.y <= term.size.y);
 }
 
 int tty_send(cap* restrict c)
@@ -575,7 +580,7 @@ int tty_fsend(cap* restrict c, FILE* restrict file)
 
     tty_send_update__(c);
 
-    assert(term.pos.y < term.size.y);
+    assert(term.pos.y <= term.size.y);
     assert(term.pos.x < term.size.x);
     return 0;
 }
@@ -661,17 +666,18 @@ int tty_goto_prev_eol(void)
         term.pos.x = term.size.x - 1;
         --term.pos.y;
 
-        assert(term.pos.y < term.size.y);
+        assert(term.pos.y <= term.size.y);
         assert(term.pos.x < term.size.x);
         return 0;
     }*/
     if (tcaps.line_goto_prev_eol.fallback >= FB_NONE) {
         tty_send(&tcaps.cursor_up);
-        tty_send_n(&tcaps.cursor_right, term.size.x - term.pos.x - 1);
+        tty_send_n(&tcaps.cursor_right, term.size.x - term.pos.x);
+        // tty_send_n(&tcaps.cursor_right, term.size.x - term.pos.x - 1);
         fflush(stdout);
 
-        assert(term.pos.y < term.size.y);
-        assert(term.pos.x < term.size.x);
+        assert(term.pos.y <= term.size.y);
+        assert(term.pos.x <= term.size.x);
         return 0;
     }
 
@@ -679,18 +685,11 @@ int tty_goto_prev_eol(void)
     return -1;
 }
 
-int tty_line_adjust(void)
+int tty_y_adjust(void)
 {
-    // Is eol
-    if (term.pos.x == term.size.x - 1) {
-        tty_putc(' ');
-        return 1;
-    }
-
-    // is start of line?
     if (term.pos.x == 0) {
-        tty_send(&tcaps.line_clr_to_eol);
         tty_goto_prev_eol();
+        tty_send(&tcaps.line_clr_to_eol);
         return -1;
     }
 
