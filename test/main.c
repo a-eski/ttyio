@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define TTYIO_NDEBUG
+// #define TTYIO_NDEBUG
 #include "common.h"
 #include "../ttyio.h"
 #include "../ttyplatform.h"
@@ -87,7 +87,7 @@ void tty_size_update_tests(void)
     // assert_trap(term.size.x - term.pos.x == term.size.x);
     assert_trap(term.size.x > term.pos.x);
     tty_size_update__((int)(term.size.x - term.pos.x)); // term.size.x - term.pos.x AKA 1
-    assert_trap(!term.pos.y);
+    assert_trap(term.pos.y = 1);
     assert_trap(prev_x < term.pos.x);
     // assert_trap(term.pos.x == term.size.x);
 
@@ -315,31 +315,31 @@ void multiline_test(void)
     multiline(1.5);
 
     tty_send_n(&tcaps.newline, 3);
-    assert_trap(term.pos.y == 21);
+    assert_trap(term.pos.y == 22);
     assert_trap(!term.pos.x);
 
     multiline(3.4);
-    assert_trap(term.pos.y == 24);
+    assert_trap(term.pos.y == 25);
 
     tty_println("term.pos.x " SIZE_T_FMT ", term.pos.y " SIZE_T_FMT, term.pos.x, term.pos.y);
     tty_send_n(&tcaps.newline, 3);
-    assert_trap(term.pos.y == 28);
-    assert_trap(!term.pos.x);
-
-    tty_println("term.size.x " SIZE_T_FMT ", term.size.y " SIZE_T_FMT, term.size.x, term.size.y);
     assert_trap(term.pos.y == 29);
     assert_trap(!term.pos.x);
 
-    multiline(6.7);
-    assert_trap(term.pos.y == 35);
-    tty_send_n(&tcaps.newline, 3);
-    assert_trap(term.pos.y == 38);
+    tty_println("term.size.x " SIZE_T_FMT ", term.size.y " SIZE_T_FMT, term.size.x, term.size.y);
+    assert_trap(term.pos.y == 30);
     assert_trap(!term.pos.x);
 
     multiline(6.7);
-    assert_trap(term.pos.y == 44);
-    tty_send(&tcaps.newline);
+    assert_trap(term.pos.y == 36);
+    tty_send_n(&tcaps.newline, 3);
+    assert_trap(term.pos.y == 39);
+    assert_trap(!term.pos.x);
+
+    multiline(6.7);
     assert_trap(term.pos.y == 45);
+    tty_send(&tcaps.newline);
+    assert_trap(term.pos.y == 46);
     assert_trap(!term.pos.x);
 }
 

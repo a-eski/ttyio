@@ -17,9 +17,9 @@
 #define assert_trap(expr)                                                  \
     do {                                                                   \
         if (!(expr)) {                                                     \
-            tty_println("triggered at %zu, %zu", term.pos.x, term.pos.y);  \
-            tty_println("%s %s %d", __FILE__, __func__, __LINE__);         \
-            tty_println("size is %zu, %zu", term.size.x, term.size.y);     \
+            printf("\ntriggered by %s at %zu, %zu\n", #expr, term.pos.x, term.pos.y);  \
+            printf("%s %s %d\n", __FILE__, __func__, __LINE__);         \
+            printf("size is %zu, %zu\n", term.size.x, term.size.y);     \
             TRAP();                                                        \
         }                                                                  \
     } while (0)
@@ -36,9 +36,9 @@
 #define trap_on(expr)                                                      \
     do {                                                                   \
         if (expr) {                                                        \
-            tty_println("triggered at %zu, %zu", term.pos.x, term.pos.y);  \
-            tty_println("%s %s %d", __FILE__, __func__, __LINE__);         \
-            tty_println("size is %zu, %zu", term.size.x, term.size.y);     \
+            printf("\ntriggered at %zu, %zu\n", term.pos.x, term.pos.y);  \
+            printf("%s %s %d\n", __FILE__, __func__, __LINE__);         \
+            printf("size is %zu, %zu\n", term.size.x, term.size.y);     \
             TRAP();                                                        \
         }                                                                  \
     } while (0)

@@ -38,7 +38,7 @@ extern unibi_term* uterm;
 
 #define FB_COLOR_RESET "\033[0m" /* Colors */
 
-// cap aka capacity macros
+// capability macros
 #define cap_New(s, t)                                                                                                  \
     (cap)                                                                                                              \
     {                                                                                                                  \
@@ -56,7 +56,7 @@ extern unibi_term* uterm;
     }
 
 #define tcaps_set(str, cap, fb, t)                                                                                     \
-do { \
+do {                                                                                                                   \
     if (!str || !*str)                                                                                                 \
         cap = cap_New_Lit(fb, t);                                                                                      \
     else                                                                                                               \
@@ -64,8 +64,10 @@ do { \
 } while(0)
 
 #define tcaps_set_no_fb(str, cap, t)                                                                                   \
+do {                                                                                                                   \
     if (str && *str)                                                                                                   \
-        cap = cap_New(str, t)
+        cap = cap_New(str, t);                                                                                         \
+} while(0)
 
 void tcaps_init(void)
 {

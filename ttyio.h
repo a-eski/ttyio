@@ -10,11 +10,10 @@
  */
 
 #include "tcaps.h"
-#if __STDC_VERSION__ >= 202311L /* C23 */
-#include <stdint.h>
-#endif
 
-#define TTYIO_RED_ERROR 196
+#ifndef TTYIO_RED_ERROR
+#   define TTYIO_RED_ERROR 196
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,6 +28,7 @@ typedef struct {
     Coordinates pos;
     Coordinates size;
     Coordinates saved_pos;
+    Coordinates start;
 } Terminal;
 
 /* enum input_type
@@ -36,7 +36,7 @@ typedef struct {
  * Noncanonical: read character by character. programs who need control over each input need to use this.
  */
 #if __STDC_VERSION__ >= 202311L /* C23 */
-enum input_type: uint8_t {
+enum input_type: short {
     TTY_NONE = 0,
     TTY_CANONICAL_MODE = 1,
     TTY_NONCANONICAL_MODE = 2
@@ -67,6 +67,7 @@ void tty_deinit_input_mode(void);
 void tty_deinit(void);
 
 /* Output, tracks pos of cursor for you and stores in term */
+int tty_putc_invis();
 int tty_putc(char c);
 int tty_fputc(FILE* restrict file, char c);
 int tty_dputc(int fd, char c);
@@ -110,11 +111,17 @@ int tty_color_set(int color);
 int tty_color_bg_set(int color);
 #define tty_color_reset() tty_send(&tcaps.color_reset)
 
-/* Advanced Output which can have multiple fallbacks.
- * Fallback handling is in ttyio, tcaps just determines which method to use.
+/* Advanced Output which can have multiple fallbacks. */
+/* Fallback handling is in ttyio for advanced fallbacks, tcaps just determines which method to use.
  */
 int tty_goto_prev_eol(void);
 
+/* Adjustments, key press handlers, and line control */
+
+/* set start position (like for a prompt) where you don't want the cursor to go above (for backspaces/left arrow or other key presses that could be setup to move the cursor left/up) */
+static inline void tty_set_start() {
+    term.start.x = term.pos.x, term.start.y = term.pos.y;
+}
 /* Handle moving cursor to previous line when needed. Returns -1 if moved up or 0 if no movement. */
 int tty_y_adjust(void);
 

@@ -115,14 +115,15 @@ Coordinates tty_size_get__(void)
 #endif
 }
 
-void tty_init_pos__(void)
+inline Coordinates tty_get_pos__(void);
+Coordinates tty_get_pos__(void)
 {
     // NOTE: unibilium doesnt have a way to query the cursor position.
     // Need to query the terminal for the position on start,
     // so ttyio's tracking is accurate.
     // response format from terminal is "/033[{row};{col}R"
     if (write(STDOUT_FILENO, "\033[6n", 4) == -1)
-        return;
+        return (Coordinates){0};
 
     char buf[TTY_BUF_SIZE];
     int i = 0;
@@ -136,14 +137,20 @@ void tty_init_pos__(void)
     buf[i] = '\0';
 
     if (buf[0] != '\033' || buf[1] != '[')
-        return;
+        return (Coordinates){0};
+
 
     int row, col;
     if (sscanf(buf + 2, "%d;%d", &row, &col) != 2)
-        return;
+        return (Coordinates){0};
 
-    term.pos.x = col > 0 ? (size_t)col - 1 : 0;
-    term.pos.y = row > 0 ? (size_t)row - 1 : 0;
+    return (Coordinates){.x = col > 0 ? (size_t)col : 0, .y = row > 0 ? (size_t)row - 1 : 0};
+}
+
+void tty_init_pos__(void)
+{
+    term.pos = tty_get_pos__();
+    // tty_println("init pos %zu %zu", term.pos.x, term.pos.y);
 
     assert(term.pos.x == 0 || term.pos.x <= term.size.x);
     assert(term.pos.y == 0 || term.pos.y <= term.size.y);
@@ -286,6 +293,7 @@ void tty_y_update__(const int printed)
         else if (term.pos.x == term.size.x && printed == 1) {
             ++term.pos.y;
         }
+        // else if (term.pos.x + (size_t)printed > term.size.x) {
         else if (term.pos.x + (size_t)printed >= term.size.x) {
             double new_y = term.pos.x + printed / (double)term.size.x;
             if (new_y < 1) {
@@ -321,6 +329,16 @@ void tty_size_update__(const int printed)
     else {
         term.pos.x += (size_t)(printed == 1 ? 1 : printed + 1);
     }
+
+    assert(term.pos.x <= term.size.x);
+}
+
+int tty_putc_invis()
+{
+    char c = '\n';
+    _MAYBE_UNUSED_ int printed = write(STDOUT_FILENO, &c, 1);
+    assert(printed != EOF && printed == 1);
+    return 1;
 }
 
 int tty_putc(char c)
@@ -528,7 +546,8 @@ inline void tty_send_update__(cap* restrict c)
         --term.pos.x;
         break;
     case CAP_CURSOR_UP:
-        --term.pos.y;
+        if (term.pos.y > 0)
+            --term.pos.y;
         break;
     case CAP_CURSOR_DOWN:
         ++term.pos.y;
@@ -672,8 +691,7 @@ int tty_goto_prev_eol(void)
     }*/
     if (tcaps.line_goto_prev_eol.fallback >= FB_NONE) {
         tty_send(&tcaps.cursor_up);
-        tty_send_n(&tcaps.cursor_right, term.size.x - term.pos.x);
-        // tty_send_n(&tcaps.cursor_right, term.size.x - term.pos.x - 1);
+        tty_send_n(&tcaps.cursor_right, term.size.x);
         fflush(stdout);
 
         assert(term.pos.y <= term.size.y);
@@ -689,7 +707,7 @@ int tty_y_adjust(void)
 {
     if (term.pos.x == 0) {
         tty_goto_prev_eol();
-        tty_send(&tcaps.line_clr_to_eol);
+        tty_send(&tcaps.scr_clr_to_eos);
         return -1;
     }
 
