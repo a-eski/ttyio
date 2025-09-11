@@ -24,13 +24,6 @@ typedef struct {
     size_t y;
 } Coordinates;
 
-typedef struct {
-    Coordinates pos;
-    Coordinates size;
-    Coordinates saved_pos;
-    Coordinates start;
-} Terminal;
-
 /* enum input_type
  * Canonical: read line by line, only get the line after user presses enter. a lot of programs work this way.
  * Noncanonical: read character by character. programs who need control over each input need to use this.
@@ -50,7 +43,9 @@ enum input_type {
 #endif /* C23 */
 
 extern termcaps tcaps;
-extern Terminal term;
+
+Coordinates tty_get_size(void);
+Coordinates tty_get_pos(void);
 
 /* Just init term and tcaps */
 void tty_init_caps(void);
@@ -110,20 +105,6 @@ void tty_fsend_n(cap* restrict c, size_t n, FILE* restrict file);
 int tty_color_set(int color);
 int tty_color_bg_set(int color);
 #define tty_color_reset() tty_send(&tcaps.color_reset)
-
-/* Advanced Output which can have multiple fallbacks. */
-/* Fallback handling is in ttyio for advanced fallbacks, tcaps just determines which method to use.
- */
-int tty_goto_prev_eol(void);
-
-/* Adjustments, key press handlers, and line control */
-
-/* set start position (like for a prompt) where you don't want the cursor to go above (for backspaces/left arrow or other key presses that could be setup to move the cursor left/up) */
-static inline void tty_set_start() {
-    term.start.x = term.pos.x, term.start.y = term.pos.y;
-}
-/* Handle moving cursor to previous line when needed. Returns -1 if moved up or 0 if no movement. */
-int tty_y_adjust(void);
 
 #ifdef __cplusplus
 }

@@ -13,18 +13,17 @@ void bg_colors_test(void)
         tty_write(" ", 1);
     }
     tty_color_reset();
-    assert(term.pos.y == 45);
     tty_send(&tcaps.newline);
-    assert(term.pos.y == 45);
 }
 
 int main()
 {
     tty_init(TTY_NONCANONICAL_MODE);
+    Coordinates size = tty_get_size();
 
     int curr_color = 16;
-    for (size_t y = 0; y < term.size.y; ++y) {
-        for (size_t x = 0; x < term.size.x; ++x) {
+    for (size_t y = 0; y < size.y; ++y) {
+        for (size_t x = 0; x < size.x; ++x) {
             tty_color_bg_set(curr_color);
             tty_putc(' ');
         }
