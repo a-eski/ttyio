@@ -8,13 +8,13 @@ ttyio is a lightweight wrapper library for unibilium.
 
 ## Features
 
-* Cross-platform
+* Cross-platform, supports a variety of terminals.
 * Easy access to terminal capabilities.
+* No more ANSI escape codes in your code.
 * Simple output interfaces.
-* Tracks cursor position, terminal size, and saved cursor position automatically.
 * Can initialize the terminal for canonical or noncanonical input.
+* Can give terminal size or position.
 * Falls back to ASCII control characters when can't load capabilities from terminfo.
-* Advanced capabilities with multiple fallbacks.
 * Compilable with C99, but uses C23 features when available.
 
 ## Supported Platforms
@@ -73,12 +73,10 @@ Here is a quick guide on building the main example in different environments.
 ## Example
 
 Example is in main.c.
-It has assertions but you can disable them.
-To run on any size terminal to see the example, use:
 
 ``` sh
-make DEFINES=-DNDEBUG
-# or do a release build
+make debug
+# or
 make release
 ```
 

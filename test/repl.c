@@ -4,42 +4,49 @@
 
 #include "../ttyio.h"
 
-#if defined(_MSC_VER)
-#  define TRAP() __debugbreak()
-// #elif defined(__GNUC__) || defined(__clang__)
-// #  define TRAP() __builtin_trap()
-#else
-#  include <signal.h>
-#  define TRAP() raise(SIGTRAP)
-#endif
+// ttyio is not intended to be used as a linereader on its own, use bestline. You could use ttyio together with bestline, though. This is just an example.
 
-#define ASSERT_TRAP(expr)                                                \
-    do {                                                                 \
-        if (expr) {                                                      \
-            TRAP();                                                      \
-        }                                                                \
-    } while (0)
+#define PROMPT "ttyio > "
+void prompt()
+{
+    static_assert(sizeof(PROMPT) - 1 == 8);
+    tty_write(PROMPT, sizeof(PROMPT) - 1);
+}
+
+void bs()
+{
+    tty_send(&tcaps.bs);
+}
 
 /* repl: some tests and example usage */
 int main(void)
 {
     tty_init(TTY_NONCANONICAL_MODE);
+    tty_send(&tcaps.scr_clr);
+    tty_send(&tcaps.cursor_home);
 
     char c;
+    prompt();
 
     while (read(STDIN_FILENO, &c, 1) > 0) {
-        ASSERT_TRAP(c == (int)'q');
         switch (c) {
             case 127:
-                tty_send(&tcaps.bs);
+                bs();
+                break;
+            case 'q':
+                goto end;
+            case '\r':
+            case '\n':
+                tty_send(&tcaps.newline);
+                prompt();
                 break;
             default:
                 tty_putc(c);
                 break;
         }
-        tty_line_adjust();
     }
 
+end:
     tty_send(&tcaps.newline);
     tty_deinit();
     return 0;

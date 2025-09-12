@@ -10,11 +10,10 @@
  */
 
 #include "tcaps.h"
-#if __STDC_VERSION__ >= 202311L /* C23 */
-#include <stdint.h>
-#endif
 
-#define TTYIO_RED_ERROR 196
+#ifndef TTYIO_RED_ERROR
+#   define TTYIO_RED_ERROR 196
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,18 +24,12 @@ typedef struct {
     size_t y;
 } Coordinates;
 
-typedef struct {
-    Coordinates pos;
-    Coordinates size;
-    Coordinates saved_pos;
-} Terminal;
-
 /* enum input_type
  * Canonical: read line by line, only get the line after user presses enter. a lot of programs work this way.
  * Noncanonical: read character by character. programs who need control over each input need to use this.
  */
 #if __STDC_VERSION__ >= 202311L /* C23 */
-enum input_type: uint8_t {
+enum input_type: short {
     TTY_NONE = 0,
     TTY_CANONICAL_MODE = 1,
     TTY_NONCANONICAL_MODE = 2
@@ -50,7 +43,9 @@ enum input_type {
 #endif /* C23 */
 
 extern termcaps tcaps;
-extern Terminal term;
+
+Coordinates tty_get_size(void);
+Coordinates tty_get_pos(void);
 
 /* Just init term and tcaps */
 void tty_init_caps(void);
@@ -67,6 +62,7 @@ void tty_deinit_input_mode(void);
 void tty_deinit(void);
 
 /* Output, tracks pos of cursor for you and stores in term */
+int tty_putc_invis();
 int tty_putc(char c);
 int tty_fputc(FILE* restrict file, char c);
 int tty_dputc(int fd, char c);
@@ -109,16 +105,6 @@ void tty_fsend_n(cap* restrict c, size_t n, FILE* restrict file);
 int tty_color_set(int color);
 int tty_color_bg_set(int color);
 #define tty_color_reset() tty_send(&tcaps.color_reset)
-
-/* Advanced Output which can have multiple fallbacks.
- * Fallback handling is in ttyio, tcaps just determines which method to use.
- */
-int tty_goto_prev_eol(void);
-
-/* Handle moving cursor to next line or previous line. */
-int tty_line_adjust(void);
-/* Same as above, just won't move cursor above term.start.x or term.start.y */
-// void tty_line_adjust_ckd(void);
 
 #ifdef __cplusplus
 }
