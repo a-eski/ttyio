@@ -424,6 +424,22 @@ int tty_perror(const char* restrict msg)
     return printed;
 }
 
+int tty_perrorf(const char* restrict fmt, ...)
+{
+    int printed;
+    tty_color_set(TTYIO_RED_ERROR);
+    va_list args;
+    va_start(args, fmt);
+    printed = vfprintf(stderr, fmt, args);
+    va_end(args);
+    char* err_str = strerror(errno);
+    tty_color_reset();
+    printed += tty_fprint(stderr, ": %s", err_str);
+    fflush(stderr);
+    tty_send(&tcaps.newline);
+    return printed;
+}
+
 int tty_send(cap* restrict c)
 {
     assert(c && c->len);

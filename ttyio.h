@@ -91,6 +91,8 @@ int tty_dprintln(int fd, const char* restrict fmt, ...)
     __attribute__ ((__format__ (__printf__, 2, 3)));
 
 int tty_perror(const char* restrict msg);
+int tty_perrorf(const char* restrict fmt, ...)
+    __attribute__ ((__format__ (__printf__, 1, 2)));
 
 /* Output using tcaps, fallsback to ASCII control characters if cap not found. */
 int tty_send(cap* restrict c);
