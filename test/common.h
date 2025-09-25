@@ -17,9 +17,7 @@
 #define assert_trap(expr)                                                  \
     do {                                                                   \
         if (!(expr)) {                                                     \
-            printf("\ntriggered by %s at %zu, %zu\n", #expr, term.pos.x, term.pos.y);  \
             printf("%s %s %d\n", __FILE__, __func__, __LINE__);         \
-            printf("size is %zu, %zu\n", term.size.x, term.size.y);     \
             TRAP();                                                        \
         }                                                                  \
     } while (0)
@@ -36,9 +34,7 @@
 #define trap_on(expr)                                                      \
     do {                                                                   \
         if (expr) {                                                        \
-            printf("\ntriggered at %zu, %zu\n", term.pos.x, term.pos.y);  \
             printf("%s %s %d\n", __FILE__, __func__, __LINE__);         \
-            printf("size is %zu, %zu\n", term.size.x, term.size.y);     \
             TRAP();                                                        \
         }                                                                  \
     } while (0)

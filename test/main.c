@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <errno.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -157,6 +158,9 @@ int main(void)
 
     multiline(.8);
     multiline(.8);
+
+    errno = 5;
+    tty_perrorf("%s", "hello");
 
     char c;
     if (read(STDIN_FILENO, &c, 1) == -1)
